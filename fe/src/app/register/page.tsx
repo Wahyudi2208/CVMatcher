@@ -40,7 +40,7 @@ export default function RegisterPage() {
 
             if (!passwordRegex.test(form.password)) {
                 newErrors.password =
-                    "Password minimal 8 karakter, mengandung huruf besar, huruf kecil, dan simbol.";
+                    "Kata sandi minimal 8 karakter, mengandung huruf besar, huruf kecil, dan simbol.";
             }
         }
         if (!form.confirmPassword) {

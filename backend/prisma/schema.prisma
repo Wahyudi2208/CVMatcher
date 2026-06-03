@@ -34,6 +34,7 @@ model UploadSession {
   user       User?    @relation(fields: [userId], references: [id])
   cvs        CVFile[]
   job        JobDescriptionFile?
+  results    AnalysisResult[]
 
   @@map("upload_sessions")
 }
@@ -47,6 +48,7 @@ model CVFile {
 
   sessionId  Int      @map("session_id")
   session    UploadSession @relation(fields: [sessionId], references: [id])
+  results    AnalysisResult[]
 
   @@map("cv_files")
 }
@@ -63,6 +65,21 @@ model JobDescriptionFile {
   session    UploadSession @relation(fields: [sessionId], references: [id])
 
   @@map("job_description_files")
+}
+
+model AnalysisResult {
+  id         Int      @id @default(autoincrement())
+
+  score      Float
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  sessionId  Int      @map("session_id")
+  cvFileId   Int      @map("cv_file_id")
+
+  session    UploadSession @relation(fields: [sessionId], references: [id])
+  cvFile     CVFile        @relation(fields: [cvFileId], references: [id])
+
+  @@map("analysis_results")
 }
 
 enum FileType {
