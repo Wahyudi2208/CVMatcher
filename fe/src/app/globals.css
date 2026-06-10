@@ -32,3 +32,48 @@ input::-ms-reveal {
 input[type="password"] {
   appearance: none;
 }
+
+.custom-swal-popup {
+  border-radius: 24px !important;
+}
+
+.custom-swal-actions {
+  width: 100% !important;
+  padding: 0 60px 24px 60px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+}
+
+.custom-swal-confirm {
+  cursor: pointer !important;
+  color: #fff !important;
+  border-radius: 14px !important;
+  padding: 12px 20px !important;
+  background: #dc2626 !important;
+  transition: all 0.15s ease !important;
+}
+
+.custom-swal-confirm:hover {
+  background: #ef4444 !important;
+}
+
+.custom-swal-confirm:active {
+  transform: scale(0.97) !important;
+}
+
+.custom-swal-cancel {
+  cursor: pointer !important;
+  color: #fff !important;
+  border-radius: 14px !important;
+  padding: 12px 30px !important;
+  background: #6b7280 !important;
+  transition: all 0.15s ease !important;
+}
+
+.custom-swal-cancel:hover {
+  background: #9ca3af !important;
+}
+
+.custom-swal-cancel:active {
+  transform: scale(0.97) !important;
+}

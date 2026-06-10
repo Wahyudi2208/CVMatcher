@@ -1,0 +1,219 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+type Language = "Indonesia" | "English";
+type Theme = "Light" | "Dark" | "System";
+
+interface SettingsState {
+    language: Language;
+    theme: Theme;
+}
+
+export default function SettingsPage() {
+    const router = useRouter();
+    const [settings, setSettings] = useState<SettingsState>({
+        language: "Indonesia",
+        theme: "Light",
+    });
+
+    const [showConfirm, setShowConfirm] = useState<string | null>(null);
+
+    const handleAction = (action: string) => {
+        setShowConfirm(action);
+    };
+
+    const handleConfirm = () => {
+
+        if (showConfirm === "logout") {
+
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            localStorage.removeItem("currentSessionId");
+
+            router.push("/landing_page");
+
+            return;
+        }
+
+        console.log(`Action confirmed: ${showConfirm}`);
+
+        setShowConfirm(null);
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-8 md:px-16 lg:px-24">
+            <div className="max-w-2xl mx-auto">
+                <h1 className="text-3xl font-semibold text-gray-900 text-center mb-10">
+                    Pengaturan
+                </h1>
+
+                <div className="space-y-8">
+                    {/* General Section */}
+                    <section>
+                        <p className="text-sm text-gray-500 mb-3">General</p>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+                            {/* Language */}
+                            <div className="flex items-center justify-between px-6 py-4">
+                                <span className="text-sm text-gray-700">Bahasa</span>
+                                <div className="relative">
+                                    <select
+                                        value={settings.language}
+                                        onChange={(e) =>
+                                            setSettings((s) => ({
+                                                ...s,
+                                                language: e.target.value as Language,
+                                            }))
+                                        }
+                                        className="appearance-none border border-gray-200 rounded-lg px-4 py-2 pr-8 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                    >
+                                        <option value="Indonesia">Indonesia</option>
+                                        <option value="English">English</option>
+                                    </select>
+                                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                                        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Theme */}
+                            <div className="flex items-center justify-between px-6 py-4">
+                                <span className="text-sm text-gray-700">Tema</span>
+                                <div className="relative">
+                                    <select
+                                        value={settings.theme}
+                                        onChange={(e) =>
+                                            setSettings((s) => ({
+                                                ...s,
+                                                theme: e.target.value as Theme,
+                                            }))
+                                        }
+                                        className="appearance-none border border-gray-200 rounded-lg px-4 py-2 pr-8 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                    >
+                                        <option value="Light">Terang</option>
+                                        <option value="Dark">Gelap</option>
+                                        <option value="System">Sistem</option>
+                                    </select>
+                                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                                        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Data Section */}
+                    <section>
+                        <p className="text-sm text-gray-500 mt-3 mb-3">Data</p>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+                            {/* Clear app cache */}
+                            <div className="flex items-center justify-between px-6 py-4">
+                                <span className="text-sm text-gray-700">Hapus cache aplikasi</span>
+                                <button
+                                    onClick={() => handleAction("clear-cache")}
+                                    className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+                                >
+                                    Hapus
+                                </button>
+                            </div>
+
+                            {/* Clear local data */}
+                            <div className="flex items-center justify-between px-6 py-4">
+                                <span className="text-sm text-gray-700">Hapus data lokal</span>
+                                <button
+                                    onClick={() => handleAction("clear-local")}
+                                    className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+                                >
+                                    Hapus
+                                </button>
+                            </div>
+
+                            {/* Delete all analysis */}
+                            <div className="flex items-center justify-between px-6 py-4">
+                                <span className="text-sm text-gray-700">Hapus semua analisis</span>
+                                <button
+                                    onClick={() => handleAction("delete-analysis")}
+                                    className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+                                >
+                                    Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Account Section */}
+                    <section>
+                        <p className="text-sm text-gray-500 mt-3 mb-3">Account</p>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+                            <div className="flex items-center justify-between px-6 py-4">
+                                <span className="text-sm text-gray-700">Keluar dari akun anda</span>
+                                <button
+                                    onClick={() => handleAction("logout")}
+                                    className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+                                >
+                                    Keluar
+                                </button>
+                            </div>
+                            <div className="flex items-center justify-between px-6 py-4">
+                                <span className="text-sm text-gray-700">Hapus akun Anda</span>
+                                <button
+                                    onClick={() => handleAction("delete-account")}
+                                    className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+                                >
+                                    Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            {/* Confirm Modal */}
+            {showConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+                    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                            {showConfirm === "logout"
+                                ? "Keluar Akun"
+                                : "Konfirmasi"}
+                        </h2>
+                        <p className="text-sm text-gray-600 mb-6">
+                            {showConfirm === "logout"
+                                ? "Anda akan keluar dari akun ini dan kembali ke mode tamu."
+                                : "Apakah Anda yakin ingin melanjutkan tindakan ini? Tindakan ini tidak dapat dibatalkan."}
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setShowConfirm(null)}
+                                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={handleConfirm}
+                                className="px-4 py-2 text-sm rounded-lg bg-red-500 text-black font-semibold hover:bg-red-600 transition-colors"
+                            >
+                                {showConfirm === "logout"
+                                    ? "Keluar"
+                                    : "Konfirmasi"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

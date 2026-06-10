@@ -209,7 +209,6 @@ export default function UploadPage() {
                 return;
             }
 
-
             // Token
             const token = localStorage.getItem("token");
             const headers: HeadersInit = {};

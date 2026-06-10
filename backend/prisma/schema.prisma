@@ -29,6 +29,7 @@ model UploadSession {
   userId     Int?     @map("user_id") // null = guest
   token      String   @unique
   status     SessionStatus @default(DRAFT)
+  title      String?  @db.VarChar(255)
   createdAt  DateTime @default(now()) @map("created_at")
 
   user       User?    @relation(fields: [userId], references: [id])

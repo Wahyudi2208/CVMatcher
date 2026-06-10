@@ -241,6 +241,15 @@ export const analyzeSession = async (req, res) => {
 
         analyzedCVs.sort((a, b) => b.score - a.score)
 
+        await prisma.uploadSession.update({
+            where: {
+                id: session.id
+            },
+            data: {
+                status: 'PROCESSED'
+            }
+        })
+
         res.json({
             message: 'Analysis Success',
             results: analyzedCVs
@@ -282,6 +291,41 @@ export const getResults = async (req, res) => {
         })
 
     } catch (error) {
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
+
+export const getSession = async (req, res) => {
+    try {
+        const { sessionId } = req.params
+
+        const session =
+            await prisma.uploadSession.findUnique({
+                where: {
+                    id: Number(sessionId)
+                },
+                select: {
+                    id: true,
+                    status: true,
+                    title: true,
+                    userId: true,
+                    createdAt: true
+                }
+            })
+
+        if (!session) {
+            return res.status(404).json({
+                error: 'Session not found'
+            })
+        }
+
+        res.json(session)
+
+    } catch (error) {
+        console.error(error)
+
         res.status(500).json({
             error: error.message
         })

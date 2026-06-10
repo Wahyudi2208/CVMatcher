@@ -18,6 +18,38 @@ type Candidate = {
     skills: string[];
 };
 
+function getTier(score: number) {
+    if (score >= 85 && score <= 100) {
+        return {
+            label: "Sangat Sesuai",
+            labelColor: "text-green-600",
+            ringColor: "#16a34a",
+        };
+    }
+
+    if (score >= 70 && score < 85) {
+        return {
+            label: "Cukup Sesuai",
+            labelColor: "text-yellow-500",
+            ringColor: "#eab308",
+        };
+    }
+
+    if (score >= 50 && score < 70) {
+        return {
+            label: "Kurang Sesuai",
+            labelColor: "text-red-400",
+            ringColor: "#f87171",
+        };
+    }
+
+    return {
+        label: "Tidak Sesuai",
+        labelColor: "text-red-600",
+        ringColor: "#dc2626",
+    };
+}
+
 function CircleScore({ score, color }: { score: number; color: string }) {
     const radius = 28;
     const circumference = 2 * Math.PI * radius;
@@ -48,7 +80,9 @@ function CircleScore({ score, color }: { score: number; color: string }) {
                         strokeDashoffset={offset}
                     />
                 </svg>
-                <span className="relative text-sm font-bold text-gray-800">{score}%</span>
+                <span className="relative text-sm font-bold text-gray-800">
+                    {score.toFixed(2)}%
+                </span>
             </div>
         </div>
     );
@@ -117,8 +151,6 @@ export default function HasilAnalisisPage() {
     const descRef = useRef<HTMLDivElement>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const candidatesPerPage = 6;
-    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-    const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(false);
     const params = useParams();
     const [candidates, setCandidates] = useState<Candidate[]>([]);
     const [loading, setLoading] = useState(true);
@@ -206,35 +238,31 @@ export default function HasilAnalisisPage() {
                 }
 
                 const mappedCandidates = data.results.map((result: any) => {
-                    const scorePercent = Math.round(result.score * 100);
 
-                    let label = "";
-                    let labelColor = "";
-                    let ringColor = "";
+                    const scorePercent = Number(result.score);
 
-                    if (scorePercent >= 70) {
-                        label = "Sangat Sesuai";
-                        labelColor = "text-green-600";
-                        ringColor = "#16a34a";
-                    } else if (scorePercent >= 50) {
-                        label = "Cukup Sesuai";
-                        labelColor = "text-yellow-500";
-                        ringColor = "#eab308";
-                    } else {
-                        label = "Kurang Sesuai";
-                        labelColor = "text-red-500";
-                        ringColor = "#ef4444";
-                    }
+                    const tier = getTier(scorePercent);
 
                     return {
                         id: result.id,
-                        name: result.cvFile.fileName.replace(/\.(pdf|docx|doc)$/i, ""),
+
+                        name: result.cvFile.fileName.replace(
+                            /\.(pdf|docx|doc)$/i,
+                            ""
+                        ),
+
                         role: "Candidate",
+
                         cv: result.cvFile.fileName,
+
                         score: scorePercent,
-                        label,
-                        labelColor,
-                        ringColor,
+
+                        label: tier.label,
+
+                        labelColor: tier.labelColor,
+
+                        ringColor: tier.ringColor,
+
                         skills: [],
                     };
                 });
@@ -256,17 +284,6 @@ export default function HasilAnalisisPage() {
     }, [params]);
 
     useEffect(() => {
-        const savedSidebarState =
-            localStorage.getItem("desktopSidebarOpen");
-
-        if (savedSidebarState !== null) {
-            setDesktopSidebarOpen(
-                JSON.parse(savedSidebarState)
-            );
-        }
-    }, []);
-
-    useEffect(() => {
         const checkOverflow = () => {
             if (descRef.current) {
                 setShowReadMore(
@@ -283,13 +300,6 @@ export default function HasilAnalisisPage() {
             window.removeEventListener("resize", checkOverflow);
         };
     }, []);
-
-    useEffect(() => {
-        localStorage.setItem(
-            "desktopSidebarOpen",
-            JSON.stringify(desktopSidebarOpen)
-        );
-    }, [desktopSidebarOpen]);
 
     if (loading) {
         return (
@@ -355,199 +365,10 @@ export default function HasilAnalisisPage() {
                 </div>
             )}
 
-            {/* Mobile Header */}
-            <div className="md:hidden sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-                <button
-                    onClick={() => setMobileSidebarOpen(true)}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                    <Menu className="w-6 h-6 text-gray-700" />
-                </button>
-
-                <div className="flex items-center gap-2">
-                    <Image
-                        src="/img/logo-website.png"
-                        alt="CVMatcher Logo"
-                        width={24}
-                        height={24}
-                    />
-
-                    <span className="font-bold text-base">
-                        <span className="text-blue-800">CV</span>
-                        <span className="text-gray-900">Matcher</span>
-                    </span>
-                </div>
-
-                <div className="w-10" />
-            </div>
-
             <div className="flex flex-1">
-                {/* Sidebar */}
-                <aside
-                    className={`
-                        fixed top-0 left-0 z-50 h-screen bg-white border-r border-gray-200 transition-all duration-300 flex flex-col py-4
-                        ${desktopSidebarOpen
-                            ? "md:w-60" : "md:w-[72px]"} ${mobileSidebarOpen
-                                ? "translate-x-0" : "-translate-x-full"} 
-                        md:translate-x-0 w-64
-                    `}
-                >
-
-                    {/* Mobile Close Button */}
-                    <div className="md:hidden flex justify-end mb-2">
-                        <button
-                            onClick={() => setMobileSidebarOpen(false)}
-                            className="p-2 rounded-lg hover:bg-gray-100"
-                        >
-                            <X className="w-5 h-5 text-gray-700" />
-                        </button>
-                    </div>
-
-                    {/* Logo / Toggle */}
-                    <div className="px-3 mb-4">
-                        <div className="group relative flex items-center">
-                            <Link
-                                href="/landing_page"
-                                className={`
-                                    flex items-center rounded-xl hover:bg-gray-100 transition-all 
-                                    ${desktopSidebarOpen
-                                        ? "gap-2 px-2 py-2 w-full" : "justify-center w-full py-2"}
-                                `}
-                            >
-                                <Image
-                                    src="/img/logo-website.png"
-                                    alt="CVMatcher Logo"
-                                    width={28}
-                                    height={28}
-                                    className="rounded-md shrink-0"
-                                />
-
-                                {desktopSidebarOpen && (
-                                    <span className="font-bold text-lg tracking-tight whitespace-nowrap">
-                                        <span className="text-blue-800">CV</span>
-                                        <span className="text-gray-900">Matcher</span>
-                                    </span>
-                                )}
-                            </Link>
-
-                            {/* Close/Open Button Desktop */}
-                            <button
-                                onClick={() =>
-                                    setDesktopSidebarOpen(!desktopSidebarOpen)
-                                }
-                                className={`
-                                    hidden md:flex items-center justify-center absolute right-2 w-7 h-7 rounded-lg bg-white
-                                    border border-gray-200 shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-gray-100
-                                `}
-                            >
-                                {desktopSidebarOpen ? (
-                                    <X className="w-4 h-4 text-gray-700" />
-                                ) : (
-                                    <Menu className="w-4 h-4 text-gray-700" />
-                                )}
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Nav */}
-                    <nav className="flex-1 space-y-1 px-3">
-                        <a
-                            href="../upload_page"
-                            className={`
-                                flex items-center rounded-lg text-sm font-medium hover:bg-gray-100 transition-all
-                                ${desktopSidebarOpen
-                                    ? "gap-3 px-3 py-2.5" : "justify-center py-3"}
-                                text-gray-600
-                            `}
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                            </svg>
-                            {desktopSidebarOpen && "Unggah CV"}
-                        </a>
-                        <a
-                            href="#"
-                            className={`
-                                flex items-center rounded-lg text-sm font-medium transition-all bg-teal-600 text-white
-                                ${desktopSidebarOpen
-                                    ? "gap-3 px-3 py-2.5" : "justify-center py-3"}
-                                `}
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                            {desktopSidebarOpen && "Hasil Analisis"}
-                        </a>
-                    </nav>
-
-                    {/* Bottom Nav */}
-                    <div className="mt-auto space-y-1">
-                        <a
-                            href="#"
-                            className={`
-                                flex items-center rounded-lg text-sm font-medium hover:bg-gray-100 transition-all
-                                ${desktopSidebarOpen
-                                    ? "gap-3 px-3 py-2.5" : "justify-center py-3"}
-                                text-gray-600
-                            `}
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            {desktopSidebarOpen && "Profil"}
-                        </a>
-                        <a
-                            href="#"
-                            className={`
-                                flex items-center rounded-lg text-sm font-medium hover:bg-gray-100 transition-all
-                                ${desktopSidebarOpen
-                                    ? "gap-3 px-3 py-2.5" : "justify-center py-3"}
-                                text-gray-600
-                            `}
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            {desktopSidebarOpen && "Pengaturan"}
-                        </a>
-
-                        {/* User */}
-                        <div
-                            className={`
-                                flex items-center mt-2 px-3
-                                ${desktopSidebarOpen
-                                    ? "gap-3 py-2.5" : "justify-center py-3"}
-                            `}
-                        >
-                            <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                                {isLoggedIn ? userName.charAt(0).toUpperCase() : "G"}
-                            </div>
-
-                            {desktopSidebarOpen && (
-                                <span className="text-sm text-gray-700 font-medium">
-                                    {isLoggedIn ? userName : "Tamu"}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                </aside>
-
-                {/* Mobile Overlay */}
-                {mobileSidebarOpen && (
-                    <div
-                        className="fixed inset-0 bg-black/40 z-40 md:hidden"
-                        onClick={() => setMobileSidebarOpen(false)}
-                    />
-                )}
 
                 {/* Main Content */}
-                <main
-                    className={`
-                        flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 py-6 w-full max-w-[1600px] transition-all duration-300 md:ml-[72px] 
-                        ${desktopSidebarOpen ? "lg:ml-[240px]" : "lg:ml-[72px]"}
-                    `}
-                >
+                <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
                     {/* Header */}
                     <div className="mb-5">
                         <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Hasil Analisis</h1>
@@ -556,7 +377,7 @@ export default function HasilAnalisisPage() {
                                 <rect x="2" y="3" width="12" height="10" rx="1.5" />
                                 <path d="M5 3V2M11 3V2M2 7h12" />
                             </svg>
-                            Senior Frontend Developer — PT Teknologi Maju
+                            {`Session #${params.sessionId}`}
                         </div>
                     </div>
 
@@ -630,22 +451,26 @@ export default function HasilAnalisisPage() {
                         <div className="bg-white border border-gray-200 rounded-xl p-4">
                             <p className="text-xs text-gray-500">Rata-rata Skor</p>
                             <p className="text-2xl font-bold text-blue-600 mt-1">
-                                {candidates.length > 0
-                                    ? Math.round(
-                                        candidates.reduce(
-                                            (acc, curr) => acc + curr.score,
-                                            0
-                                        ) / candidates.length
-                                    )
-                                    : 0}%
+                                {
+                                    candidates.length > 0
+                                        ? (
+                                            candidates.reduce(
+                                                (acc, curr) => acc + curr.score,
+                                                0
+                                            ) / candidates.length
+                                        ).toFixed(2)
+                                        : "0.00"
+                                }%
                             </p>
                         </div>
                         <div className="bg-white border border-gray-200 rounded-xl p-4">
                             <p className="text-xs text-gray-500">Sangat Sesuai</p>
-                            <p className="text-2xl font-bold text-gray-800 mt-1">
+                            <p className="text-2xl font-bold text-green-600 mt-1">
                                 {
                                     candidates.filter(
-                                        (c) => c.score >= 70
+                                        (c) =>
+                                            c.score >= 85 &&
+                                            c.score <= 100
                                     ).length
                                 }
                                 <span className="text-sm font-normal text-gray-400">kandidat</span>
@@ -653,7 +478,20 @@ export default function HasilAnalisisPage() {
                         </div>
                         <div className="bg-white border border-gray-200 rounded-xl p-4">
                             <p className="text-xs text-gray-500">Cukup Sesuai</p>
-                            <p className="text-2xl font-bold text-gray-800 mt-1">
+                            <p className="text-2xl font-bold text-yellow-500 mt-1">
+                                {
+                                    candidates.filter(
+                                        (c) =>
+                                            c.score >= 70 &&
+                                            c.score < 85
+                                    ).length
+                                }
+                                <span className="text-sm font-normal text-gray-400">kandidat</span>
+                            </p>
+                        </div>
+                        <div className="bg-white border border-gray-200 rounded-xl p-4 col-span-2 sm:col-span-1">
+                            <p className="text-xs text-gray-500">Kurang Sesuai</p>
+                            <p className="text-2xl font-bold text-red-500 mt-1">
                                 {
                                     candidates.filter(
                                         (c) =>
@@ -664,9 +502,13 @@ export default function HasilAnalisisPage() {
                                 <span className="text-sm font-normal text-gray-400">kandidat</span>
                             </p>
                         </div>
-                        <div className="bg-white border border-gray-200 rounded-xl p-4 col-span-2 sm:col-span-1">
-                            <p className="text-xs text-gray-500">Kurang Sesuai</p>
-                            <p className="text-2xl font-bold text-red-500 mt-1">
+
+                        <div className="bg-white border border-gray-200 rounded-xl p-4">
+                            <p className="text-xs text-gray-500">
+                                Tidak Sesuai
+                            </p>
+
+                            <p className="text-2xl font-bold text-red-600 mt-1">
                                 {
                                     candidates.filter(
                                         (c) => c.score < 50

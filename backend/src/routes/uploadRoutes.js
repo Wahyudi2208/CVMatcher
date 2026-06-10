@@ -6,7 +6,8 @@ import {
     uploadCV,
     uploadJob,
     analyzeSession,
-    getResults
+    getResults,
+    getSession
 } from '../controllers/uploadController.js'
 
 const router = express.Router()
@@ -40,6 +41,12 @@ router.post(
 router.get(
     '/results/:sessionId',
     getResults
+)
+
+// Ambil session
+router.get(
+    '/session/:sessionId',
+    getSession
 )
 
 export default router
