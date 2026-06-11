@@ -101,8 +101,8 @@ export default function ProfilePage() {
                                 onChange={(e) => setForm((prev) => ({ ...prev, displayName: e.target.value }))}
                                 readOnly={!isEditing}
                                 className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors ${isEditing
-                                        ? "border-blue-400 bg-white focus:ring-2 focus:ring-blue-100"
-                                        : "border-gray-200 bg-gray-50 cursor-default"
+                                    ? "border-blue-400 bg-white focus:ring-2 focus:ring-blue-100"
+                                    : "border-gray-200 bg-gray-50 cursor-default"
                                     }`}
                             />
                         </div>
@@ -116,8 +116,8 @@ export default function ProfilePage() {
                                 onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                                 readOnly={!isEditing}
                                 className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors ${isEditing
-                                        ? "border-blue-400 bg-white focus:ring-2 focus:ring-blue-100"
-                                        : "border-gray-200 bg-gray-50 cursor-default"
+                                    ? "border-blue-400 bg-white focus:ring-2 focus:ring-blue-100"
+                                    : "border-gray-200 bg-gray-50 cursor-default"
                                     }`}
                             />
                         </div>
@@ -131,8 +131,8 @@ export default function ProfilePage() {
                                 onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
                                 readOnly={!isEditing}
                                 className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors ${isEditing
-                                        ? "border-blue-400 bg-white focus:ring-2 focus:ring-blue-100"
-                                        : "border-gray-200 bg-gray-50 cursor-default"
+                                    ? "border-blue-400 bg-white focus:ring-2 focus:ring-blue-100"
+                                    : "border-gray-200 bg-gray-50 cursor-default"
                                     }`}
                             />
                         </div>

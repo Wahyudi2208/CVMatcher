@@ -64,7 +64,8 @@ export default function CoreLayout({
 
             <main
                 className={`
-                    min-h-screen bg-gray-50
+                    min-h-screen bg-background
+                    text-foreground
                     transition-all duration-300
                     md:ml-[72px]
                     ${desktopSidebarOpen

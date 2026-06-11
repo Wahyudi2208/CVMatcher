@@ -3,8 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { ChevronDown, Lock, ExternalLink, Info, Menu, X } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
 
 type Candidate = {
     id: number;
@@ -64,7 +62,8 @@ function CircleScore({ score, color }: { score: number; color: string }) {
                         cy="36"
                         r={radius}
                         fill="none"
-                        stroke="#e5e7eb"
+                        stroke="currentColor"
+                        className="text-border"
                         strokeWidth="5"
                         strokeLinecap="round"
                     />
@@ -80,7 +79,7 @@ function CircleScore({ score, color }: { score: number; color: string }) {
                         strokeDashoffset={offset}
                     />
                 </svg>
-                <span className="relative text-sm font-bold text-gray-800">
+                <span className="relative text-sm font-bold text-foreground">
                     {score.toFixed(2)}%
                 </span>
             </div>
@@ -90,12 +89,12 @@ function CircleScore({ score, color }: { score: number; color: string }) {
 
 function CandidateCard({ candidate }: { candidate: Candidate }) {
     return (
-        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 flex justify-between gap-4">
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-5 flex justify-between gap-4">
             <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold text-gray-900">{candidate.name}</h3>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1 mt-1 text-sm text-gray-500">
+                <h3 className="text-base font-semibold text-foreground">{candidate.name}</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 mt-1 text-sm text-muted">
                     <span className="flex items-center gap-1">
-                        <span className="inline-block w-4 h-4 text-gray-400">
+                        <span className="inline-block w-4 h-4 text-muted">
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
                                 <rect x="2" y="3" width="12" height="10" rx="1.5" />
                                 <path d="M5 3V2M11 3V2M2 7h12" />
@@ -103,9 +102,9 @@ function CandidateCard({ candidate }: { candidate: Candidate }) {
                         </span>
                         {candidate.role}
                     </span>
-                    <span className="hidden sm:inline text-gray-300">·</span>
+                    <span className="hidden sm:inline text-border">·</span>
                     <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4 text-gray-400" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <svg className="w-4 h-4 text-muted" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
                             <path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" />
                             <path d="M5.5 6h5M5.5 9h3" />
                         </svg>
@@ -113,12 +112,12 @@ function CandidateCard({ candidate }: { candidate: Candidate }) {
                     </span>
                 </div>
                 <div className="mt-3">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Skill Sesuai</p>
+                    <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Skill Sesuai</p>
                     <div className="flex flex-wrap gap-2">
                         {candidate.skills.map((skill) => (
                             <span
                                 key={skill}
-                                className="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1 rounded-full border border-gray-200"
+                                className="bg-background text-foreground text-xs font-medium px-3 py-1 rounded-full border border-border"
                             >
                                 {skill}
                             </span>
@@ -303,8 +302,8 @@ export default function HasilAnalisisPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p className="text-gray-500 text-sm">
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <p className="text-muted text-sm">
                     Memuat hasil analisis...
                 </p>
             </div>
@@ -313,7 +312,7 @@ export default function HasilAnalisisPage() {
 
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-background">
                 <p className="text-red-500 text-sm">
                     {error}
                 </p>
@@ -329,7 +328,7 @@ export default function HasilAnalisisPage() {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-background flex flex-col">
             {/* Top Banner - Guest Only */}
             {authChecked && !isLoggedIn && showBanner && (
                 <div className="bg-teal-600 text-white px-4 py-2.5 flex items-center justify-between text-sm">
@@ -371,8 +370,8 @@ export default function HasilAnalisisPage() {
                 <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
                     {/* Header */}
                     <div className="mb-5">
-                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Hasil Analisis</h1>
-                        <div className="flex items-center gap-1.5 mt-1 text-sm text-gray-500">
+                        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Hasil Analisis</h1>
+                        <div className="flex items-center gap-1.5 mt-1 text-sm text-muted">
                             <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
                                 <rect x="2" y="3" width="12" height="10" rx="1.5" />
                                 <path d="M5 3V2M11 3V2M2 7h12" />
@@ -382,8 +381,8 @@ export default function HasilAnalisisPage() {
                     </div>
 
                     {/* Job Description Card */}
-                    <div className="bg-white border border-gray-200 rounded-xl p-5 mb-5">
-                        <h2 className="text-sm font-semibold text-gray-900 mb-3">
+                    <div className="bg-card border border-border rounded-xl p-5 mb-5">
+                        <h2 className="text-sm font-semibold text-foreground mb-3">
                             Deskripsi Pekerjaan
                         </h2>
 
@@ -391,15 +390,15 @@ export default function HasilAnalisisPage() {
                             ref={descRef}
                             className={`relative overflow-hidden transition-all duration-300 ${descExpanded ? "max-h-[500px]" : "max-h-[130px]"}`}
                         >
-                            <div className="text-sm text-gray-700 space-y-2 pr-2">
+                            <div className="text-sm text-foreground space-y-2 pr-2">
                                 <p>
                                     <span className="font-medium">Posisi :</span>
                                     <br />
                                     Fullstack Developer
                                 </p>
 
-                                <p className="text-gray-500">
-                                    <span className="font-medium text-gray-700">
+                                <p className="text-muted">
+                                    <span className="font-medium text-foreground">
                                         Kebutuhan :
                                     </span>
                                     <br />
@@ -420,7 +419,7 @@ export default function HasilAnalisisPage() {
                             </div>
 
                             {!descExpanded && showReadMore && (
-                                <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                                <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-card to-transparent pointer-events-none" />
                             )}
                         </div>
 
@@ -442,14 +441,14 @@ export default function HasilAnalisisPage() {
 
                     {/* Stats Row */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
-                        <div className="bg-white border border-gray-200 rounded-xl p-4">
-                            <p className="text-xs text-gray-500">Total Kandidat</p>
+                        <div className="bg-card border border-border rounded-xl p-4">
+                            <p className="text-xs text-muted">Total Kandidat</p>
                             <p className="text-2xl font-bold text-blue-600 mt-1">
                                 {candidates.length}
                             </p>
                         </div>
-                        <div className="bg-white border border-gray-200 rounded-xl p-4">
-                            <p className="text-xs text-gray-500">Rata-rata Skor</p>
+                        <div className="bg-card border border-border rounded-xl p-4">
+                            <p className="text-xs text-muted">Rata-rata Skor</p>
                             <p className="text-2xl font-bold text-blue-600 mt-1">
                                 {
                                     candidates.length > 0
@@ -463,8 +462,8 @@ export default function HasilAnalisisPage() {
                                 }%
                             </p>
                         </div>
-                        <div className="bg-white border border-gray-200 rounded-xl p-4">
-                            <p className="text-xs text-gray-500">Sangat Sesuai</p>
+                        <div className="bg-card border border-border rounded-xl p-4">
+                            <p className="text-xs text-muted">Sangat Sesuai</p>
                             <p className="text-2xl font-bold text-green-600 mt-1">
                                 {
                                     candidates.filter(
@@ -473,11 +472,11 @@ export default function HasilAnalisisPage() {
                                             c.score <= 100
                                     ).length
                                 }
-                                <span className="text-sm font-normal text-gray-400">kandidat</span>
+                                <span className="text-sm font-normal text-muted">kandidat</span>
                             </p>
                         </div>
-                        <div className="bg-white border border-gray-200 rounded-xl p-4">
-                            <p className="text-xs text-gray-500">Cukup Sesuai</p>
+                        <div className="bg-card border border-border rounded-xl p-4">
+                            <p className="text-xs text-muted">Cukup Sesuai</p>
                             <p className="text-2xl font-bold text-yellow-500 mt-1">
                                 {
                                     candidates.filter(
@@ -486,11 +485,11 @@ export default function HasilAnalisisPage() {
                                             c.score < 85
                                     ).length
                                 }
-                                <span className="text-sm font-normal text-gray-400">kandidat</span>
+                                <span className="text-sm font-normal text-muted">kandidat</span>
                             </p>
                         </div>
-                        <div className="bg-white border border-gray-200 rounded-xl p-4 col-span-2 sm:col-span-1">
-                            <p className="text-xs text-gray-500">Kurang Sesuai</p>
+                        <div className="bg-card border border-border rounded-xl p-4 col-span-2 sm:col-span-1">
+                            <p className="text-xs text-muted">Kurang Sesuai</p>
                             <p className="text-2xl font-bold text-red-500 mt-1">
                                 {
                                     candidates.filter(
@@ -499,12 +498,12 @@ export default function HasilAnalisisPage() {
                                             c.score < 70
                                     ).length
                                 }
-                                <span className="text-sm font-normal text-gray-400">kandidat</span>
+                                <span className="text-sm font-normal text-muted">kandidat</span>
                             </p>
                         </div>
 
-                        <div className="bg-white border border-gray-200 rounded-xl p-4">
-                            <p className="text-xs text-gray-500">
+                        <div className="bg-card border border-border rounded-xl p-4">
+                            <p className="text-xs text-muted">
                                 Tidak Sesuai
                             </p>
 
@@ -514,7 +513,7 @@ export default function HasilAnalisisPage() {
                                         (c) => c.score < 50
                                     ).length
                                 }
-                                <span className="text-sm font-normal text-gray-400">kandidat</span>
+                                <span className="text-sm font-normal text-muted">kandidat</span>
                             </p>
                         </div>
                     </div>
@@ -522,11 +521,11 @@ export default function HasilAnalisisPage() {
                     {/* Filter Row (locked) */}
                     <div className="relative mb-4">
                         <div className="flex items-center justify-between gap-3 blur-sm pointer-events-none select-none" aria-hidden="true">
-                            <div className="h-9 w-24 bg-gray-200 rounded-lg" />
-                            <div className="h-9 w-24 bg-gray-200 rounded-lg" />
+                            <div className="h-9 w-24 bg-border rounded-lg" />
+                            <div className="h-9 w-24 bg-border rounded-lg" />
                         </div>
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <button className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-5 py-2 rounded-full shadow-lg hover:bg-gray-800 transition-colors">
+                            <button className="flex items-center gap-2 bg-card border border-border text-foreground text-sm font-medium px-5 py-2 rounded-full shadow-lg hover:bg-sidebar-hover transition-colors">
                                 <Lock className="w-4 h-4" />
                                 Login untuk menggunakan filter
                             </button>
@@ -534,9 +533,9 @@ export default function HasilAnalisisPage() {
                     </div>
 
                     {/* Candidate Count */}
-                    <p className="text-sm text-gray-500 mb-3">
+                    <p className="text-sm text-muted mb-3">
                         Menampilkan{" "}
-                        <span className="font-semibold text-gray-700">
+                        <span className="font-semibold text-foreground">
                             {currentCandidates.length}
                         </span>{" "}
                         dari {candidates.length} kandidat
@@ -556,7 +555,7 @@ export default function HasilAnalisisPage() {
                                 setCurrentPage((prev) => Math.max(prev - 1, 1))
                             }
                             disabled={currentPage === 1}
-                            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center text-foreground hover:bg-sidebar-hover disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             ‹
                         </button>
@@ -569,7 +568,7 @@ export default function HasilAnalisisPage() {
                                     key={page}
                                     onClick={() => setCurrentPage(page)}
                                     className={`w-10 h-10 rounded-full text-sm font-medium transition-colors ${currentPage === page
-                                        ? "bg-blue-600 text-white" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"}
+                                        ? "bg-blue-600 text-white" : "bg-card border border-border text-foreground hover:bg-sidebar-hover"}
                                     `}
                                 >
                                     {page}
@@ -584,7 +583,7 @@ export default function HasilAnalisisPage() {
                                 )
                             }
                             disabled={currentPage === totalPages}
-                            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center text-foreground hover:bg-sidebar-hover disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             ›
                         </button>

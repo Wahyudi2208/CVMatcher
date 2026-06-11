@@ -155,12 +155,12 @@ export default function Sidebar({
     return (
         <>
             {/* Mobile Header */}
-            <div className="md:hidden sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+            <div className="md:hidden sticky top-0 z-40 bg-sidebar border-b border-border px-4 py-3 flex items-center justify-between">
                 <button
                     onClick={() => setMobileSidebarOpen(true)}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="p-2 rounded-lg hover:bg-sidebar-hover transition-colors"
                 >
-                    <Menu className="w-7 h-7 text-gray-700" />
+                    <Menu className="w-7 h-7 text-sidebar-foreground" />
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -173,7 +173,7 @@ export default function Sidebar({
 
                     <span className="font-bold text-base">
                         <span className="text-blue-800">CV</span>
-                        <span className="text-gray-900">Matcher</span>
+                        <span className="text-foreground">Matcher</span>
                     </span>
                 </div>
 
@@ -183,7 +183,7 @@ export default function Sidebar({
             {/* Sidebar */}
             <aside
                 className={`
-                    fixed top-0 left-0 z-50 h-screen bg-white border-r border-gray-200 transition-all duration-300 flex flex-col py-4
+                    fixed top-0 left-0 z-50 h-screen bg-sidebar border-r border-border transition-all duration-300 flex flex-col py-4
                     ${desktopSidebarOpen
                         ? "md:w-60"
                         : "md:w-[72px]"
@@ -201,9 +201,9 @@ export default function Sidebar({
                         onClick={() =>
                             setMobileSidebarOpen(false)
                         }
-                        className="p-2 rounded-lg hover:bg-gray-100"
+                        className="p-2 rounded-lg hover:bg-sidebar-hover"
                     >
-                        <X className="w-5 h-5 text-gray-700" />
+                        <X className="w-5 h-5 text-sidebar-foreground" />
                     </button>
                 </div>
 
@@ -213,7 +213,7 @@ export default function Sidebar({
                         <Link
                             href="/landing_page"
                             className={`
-                                flex items-center rounded-xl hover:bg-gray-100 transition-all
+                                flex items-center rounded-xl hover:bg-sidebar-hover transition-all
                                 ${itemClass
                                     ? "gap-2 px-2 py-2 w-full"
                                     : "justify-center w-full py-2"}
@@ -229,7 +229,7 @@ export default function Sidebar({
                             {showLabel && (
                                 <span className="font-bold text-lg tracking-tight whitespace-nowrap">
                                     <span className="text-blue-800">CV</span>
-                                    <span className="text-gray-900">Matcher</span>
+                                    <span className="text-foreground">Matcher</span>
                                 </span>
                             )}
                         </Link>
@@ -240,12 +240,12 @@ export default function Sidebar({
                                     !desktopSidebarOpen
                                 )
                             }
-                            className="hidden md:flex items-center justify-center absolute right-2 w-7 h-7 rounded-lg bg-white border border-gray-200 shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-gray-100"
+                            className="hidden md:flex items-center justify-center absolute right-2 w-7 h-7 rounded-lg bg-card border border-border shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-sidebar-hover"
                         >
                             {desktopSidebarOpen ? (
-                                <X className="w-4 h-4 text-gray-700" />
+                                <X className="w-4 h-4 text-sidebar-foreground" />
                             ) : (
-                                <Menu className="w-4 h-4 text-gray-700" />
+                                <Menu className="w-4 h-4 text-sidebar-foreground" />
                             )}
                         </button>
                     </div>
@@ -255,7 +255,7 @@ export default function Sidebar({
                 <nav className="flex-1 space-y-1 px-3">
 
                     <Link
-                        href="#"
+                        href="/upload_page"
                         onClick={handleUploadClick}
                         className={`
                             flex items-center rounded-lg text-sm font-medium transition-all
@@ -264,7 +264,7 @@ export default function Sidebar({
                                 : "justify-center py-3"}
                             ${isActive("/upload_page")
                                 ? "bg-teal-600 text-white"
-                                : "text-gray-600 hover:bg-gray-100"}
+                                : "text-sidebar-foreground hover:bg-sidebar-hover"}
             `}
                     >
                         <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -288,7 +288,7 @@ export default function Sidebar({
                                     : "justify-center py-3"}
                             ${isActive("/analysis_result")
                                     ? "bg-teal-600 text-white"
-                                    : "text-gray-600 hover:bg-gray-100"}
+                                    : "text-sidebar-foreground hover:bg-sidebar-hover"}
                         `}
                         >
                             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -312,7 +312,7 @@ export default function Sidebar({
                                 : "justify-center py-3"}
                             ${isActive("/profile")
                                 ? "bg-teal-600 text-white"
-                                : "text-gray-600 hover:bg-gray-100"}
+                                : "text-sidebar-foreground hover:bg-sidebar-hover"}
                         `}
                     >
                         <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -331,7 +331,7 @@ export default function Sidebar({
                                 : "justify-center py-3"}
                             ${isActive("/setting")
                                 ? "bg-teal-600 text-white"
-                                : "text-gray-600 hover:bg-gray-100"}
+                                : "text-sidebar-foreground hover:bg-sidebar-hover"}
                         `}
                     >
                         <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -353,11 +353,11 @@ export default function Sidebar({
                         <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
                             {isLoggedIn
                                 ? userName.charAt(0).toUpperCase()
-                                : "G"}
+                                : "T"}
                         </div>
 
                         {showLabel && (
-                            <span className="text-sm text-gray-700 font-medium">
+                            <span className="text-sm text-sidebar-foreground font-medium">
                                 {isLoggedIn ? userName : "Tamu"}
                             </span>
                         )}

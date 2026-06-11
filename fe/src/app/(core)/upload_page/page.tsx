@@ -213,7 +213,7 @@ export default function UploadPage() {
             }
 
             const sessionId = sessionData.session.id;
-            
+
             localStorage.setItem(
                 "currentSessionId",
                 sessionId.toString()
@@ -345,7 +345,7 @@ export default function UploadPage() {
         );
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-background">
             {/* Top Banner - Guest Only */}
             {authChecked && !isLoggedIn && showBanner && (
                 <div className="bg-teal-600 text-white px-4 py-2.5 flex items-center justify-between text-sm">
@@ -385,10 +385,10 @@ export default function UploadPage() {
             <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
 
                 <div className="mb-6">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                         Unggah CV & Deskripsi Pekerjaan
                     </h1>
-                    <p className="text-gray-500 mt-1 text-sm sm:text-base">
+                    <p className="text-muted mt-1 text-sm sm:text-base">
                         Unggah berkas CV kandidat dan masukkan deskripsi pekerjaan untuk memulai analisis semantik.
                     </p>
                 </div>
@@ -396,7 +396,7 @@ export default function UploadPage() {
                 <form onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                         {/* Upload CV Card */}
-                        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6">
+                        <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center flex-shrink-0">
                                     <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -404,8 +404,8 @@ export default function UploadPage() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <h2 className="font-semibold text-gray-900">Unggah CV</h2>
-                                    <p className="text-xs text-gray-400">Format PDF atau DOCX</p>
+                                    <h2 className="font-semibold text-foreground">Unggah CV</h2>
+                                    <p className="text-xs text-muted">Format PDF atau DOCX</p>
                                 </div>
                             </div>
 
@@ -416,27 +416,27 @@ export default function UploadPage() {
                                 onDrop={handleDrop}
                                 onClick={() => fileInputRef.current?.click()}
                                 className={`border-2 border-dashed rounded-xl p-8 sm:p-12 flex flex-col items-center justify-center cursor-pointer transition-colors ${isDragging
-                                    ? "border-teal-500 bg-teal-50" : "border-gray-200 bg-gray-50 hover:border-teal-400 hover:bg-teal-50"
+                                    ? "border-teal-500 bg-teal-50" : "border-border bg-brackground hover:border-teal-400 hover:bg-teal-50"
                                     }`}
                             >
                                 <svg
-                                    className={`w-10 h-10 mb-3 ${isDragging ? "text-teal-500" : "text-gray-400"}`}
+                                    className={`w-10 h-10 mb-3 ${isDragging ? "text-teal-500" : "text-muted"}`}
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
                                 >
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                 </svg>
-                                <p className="text-sm font-semibold text-gray-700">
+                                <p className="text-sm font-semibold text-muted">
                                     Seret & lepas berkas CV
                                 </p>
-                                <p className="text-sm text-gray-500 mt-1">
+                                <p className="text-sm text-muted mt-1">
                                     atau{" "}
                                     <span className="text-teal-600 underline font-medium">
                                         klik untuk memilih berkas
                                     </span>
                                 </p>
-                                <p className="text-xs text-gray-400 mt-2">
+                                <p className="text-xs text-muted mt-2">
                                     PDF, DOCX • Maks. {maxCVUpload} per berkas
                                 </p>
                                 <input
@@ -462,12 +462,12 @@ export default function UploadPage() {
                                                 <svg className="w-4 h-4 text-teal-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                 </svg>
-                                                <span className="text-gray-700 truncate">{file.name}</span>
+                                                <span className="text-muted truncate">{file.name}</span>
                                             </div>
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveFile(index)}
-                                                className="text-gray-400 hover:text-red-500 ml-2 flex-shrink-0"
+                                                className="text-muted hover:text-red-500 ml-2 flex-shrink-0"
                                                 aria-label={`Remove ${file.name}`}
                                             >
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -481,7 +481,7 @@ export default function UploadPage() {
                         </div>
 
                         {/* Job Description Card */}
-                        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6">
+                        <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center flex-shrink-0">
                                     <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -490,11 +490,11 @@ export default function UploadPage() {
                                 </div>
 
                                 <div>
-                                    <h2 className="font-semibold text-gray-900">
+                                    <h2 className="font-semibold text-foreground">
                                         Deskripsi Pekerjaan
                                     </h2>
 
-                                    <p className="text-xs text-gray-400">
+                                    <p className="text-xs text-muted">
                                         Ketik manual atau unggah 1 berkas PDF/DOCX
                                     </p>
                                 </div>
@@ -517,12 +517,12 @@ export default function UploadPage() {
                                         jobDescriptionFileRef.current?.click();
                                     }}
                                     className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-colors ${jobDescription.trim().length > 0
-                                        ? "opacity-50 cursor-not-allowed border-gray-200 bg-gray-100" : isDraggingJobDesc
-                                            ? "border-teal-500 bg-teal-50 cursor-pointer" : "border-gray-200 bg-gray-50 hover:border-teal-400 hover:bg-teal-50 cursor-pointer"}
+                                        ? "opacity-50 cursor-not-allowed border-border bg-background" : isDraggingJobDesc
+                                            ? "border-teal-500 bg-teal-50 cursor-pointer" : "border-border bg-brackground hover:border-teal-400 hover:bg-teal-50 cursor-pointer"}
                                         `}
                                 >
                                     <svg
-                                        className={`w-8 h-8 mb-2 ${isDraggingJobDesc ? "text-teal-500" : "text-gray-400"
+                                        className={`w-8 h-8 mb-2 ${isDraggingJobDesc ? "text-teal-500" : "text-muted"
                                             }`}
                                         fill="none"
                                         stroke="currentColor"
@@ -536,18 +536,18 @@ export default function UploadPage() {
                                         />
                                     </svg>
 
-                                    <p className="text-sm font-semibold text-gray-700">
+                                    <p className="text-sm font-semibold text-muted">
                                         Seret & lepas berkas deskripsi pekerjaan
                                     </p>
 
-                                    <p className="text-sm text-gray-500 mt-1">
+                                    <p className="text-sm text-muted mt-1">
                                         atau{" "}
                                         <span className="text-teal-600 underline font-medium">
                                             klik untuk memilih berkas
                                         </span>
                                     </p>
 
-                                    <p className="text-xs text-gray-400 mt-2">
+                                    <p className="text-xs text-muted mt-2">
                                         PDF atau DOCX • Maks. 1 berkas
                                     </p>
 
@@ -568,7 +568,7 @@ export default function UploadPage() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
 
-                                            <span className="text-gray-700 truncate">
+                                            <span className="text-muted truncate">
                                                 {jobDescriptionFile.name}
                                             </span>
                                         </div>
@@ -576,7 +576,7 @@ export default function UploadPage() {
                                         <button
                                             type="button"
                                             onClick={removeJobDescriptionFile}
-                                            className="text-gray-400 hover:text-red-500 ml-2 flex-shrink-0"
+                                            className="text-muted hover:text-red-500 ml-2 flex-shrink-0"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -603,15 +603,15 @@ export default function UploadPage() {
                                         }}
                                         placeholder={"Contoh:\n\nKami mencari Software Engineer dengan pengalaman minimal 3 tahun di..."}
                                         maxLength={2000}
-                                        className="w-full min-h-[220px] sm:min-h-[260px] resize-none border border-gray-200 rounded-xl p-4 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        className="w-full min-h-[220px] sm:min-h-[260px] resize-none border border-border rounded-xl p-4 text-sm text-foreground bg-card placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                     />
 
                                     <div className="flex items-center justify-between mt-2">
-                                        <span className="text-xs text-gray-400">
+                                        <span className="text-xs text-muted">
                                             Minimal 50 karakter untuk analisis terbaik
                                         </span>
 
-                                        <span className="text-xs text-gray-400">
+                                        <span className="text-xs text-muted">
                                             {jobDescription.length}/2,000
                                         </span>
                                     </div>
@@ -623,7 +623,7 @@ export default function UploadPage() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                     </svg>
 
-                                    <p className="text-xs text-gray-700">
+                                    <p className="text-xs text-muted">
                                         <span className="font-semibold">Tips:</span>{" "}
                                         Sertakan kualifikasi, skill teknis, dan tanggung jawab pekerjaan untuk hasil analisis yang lebih akurat.
                                     </p>
@@ -639,7 +639,7 @@ export default function UploadPage() {
                             disabled={!isFormValid}
                             className={`w-full max-w-2xl flex items-center justify-center gap-2 py-3.5 px-8 rounded-2xl text-sm sm:text-base font-semibold transition-all ${isFormValid
                                 ? "bg-teal-600 hover:bg-teal-700 text-white shadow-md"
-                                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                : "bg-gray-200 text-muted cursor-not-allowed"
                                 }`}
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -651,7 +651,7 @@ export default function UploadPage() {
                             </svg>
                         </button>
                         {!isFormValid && (
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted">
                                 Unggah minimal 1 CV dan isi deskripsi pekerjaan untuk melanjutkan
                             </p>
                         )}

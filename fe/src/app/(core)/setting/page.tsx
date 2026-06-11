@@ -2,20 +2,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 type Language = "Indonesia" | "English";
-type Theme = "Light" | "Dark" | "System";
 
 interface SettingsState {
     language: Language;
-    theme: Theme;
 }
 
 export default function SettingsPage() {
     const router = useRouter();
+    const { theme, setTheme } = useTheme();
     const [settings, setSettings] = useState<SettingsState>({
         language: "Indonesia",
-        theme: "Light",
     });
 
     const [showConfirm, setShowConfirm] = useState<string | null>(null);
@@ -43,20 +42,20 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-8 md:px-16 lg:px-24">
+        <div className="min-h-screen bg-background px-4 py-8 sm:px-8 md:px-16 lg:px-24">
             <div className="max-w-2xl mx-auto">
-                <h1 className="text-3xl font-semibold text-gray-900 text-center mb-10">
+                <h1 className="text-3xl font-semibold text-foreground text-center mb-10">
                     Pengaturan
                 </h1>
 
                 <div className="space-y-8">
                     {/* General Section */}
                     <section>
-                        <p className="text-sm text-gray-500 mb-3">General</p>
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+                        <p className="text-sm text-muted mb-3">General</p>
+                        <div className="bg-card rounded-xl shadow-sm border border-border divide-y divide-border">
                             {/* Language */}
                             <div className="flex items-center justify-between px-6 py-4">
-                                <span className="text-sm text-gray-700">Bahasa</span>
+                                <span className="text-sm text-foreground">Bahasa</span>
                                 <div className="relative">
                                     <select
                                         value={settings.language}
@@ -66,12 +65,12 @@ export default function SettingsPage() {
                                                 language: e.target.value as Language,
                                             }))
                                         }
-                                        className="appearance-none border border-gray-200 rounded-lg px-4 py-2 pr-8 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                        className="appearance-none border border-border rounded-lg px-4 py-2 pr-8 text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                                     >
-                                        <option value="Indonesia">Indonesia</option>
-                                        <option value="English">English</option>
+                                        <option className="cursor-pointer" value="Indonesia">Indonesia</option>
+                                        <option className="cursor-pointer" value="English">English</option>
                                     </select>
-                                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted">
                                         <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
                                             <path
                                                 fillRule="evenodd"
@@ -85,24 +84,26 @@ export default function SettingsPage() {
 
                             {/* Theme */}
                             <div className="flex items-center justify-between px-6 py-4">
-                                <span className="text-sm text-gray-700">Tema</span>
+                                <span className="text-sm text-foreground">Tema</span>
                                 <div className="relative">
                                     <select
-                                        value={settings.theme}
+                                        value={theme}
                                         onChange={(e) =>
-                                            setSettings((s) => ({
-                                                ...s,
-                                                theme: e.target.value as Theme,
-                                            }))
+                                            setTheme(e.target.value)
                                         }
-                                        className="appearance-none border border-gray-200 rounded-lg px-4 py-2 pr-8 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                        className="appearance-none border border-border rounded-lg px-4 py-2 pr-8 text-sm text-foreground bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                                     >
-                                        <option value="Light">Terang</option>
-                                        <option value="Dark">Gelap</option>
-                                        <option value="System">Sistem</option>
+                                        <option value="light">Terang</option>
+                                        <option value="dark">Gelap</option>
+                                        <option value="system">Sistem</option>
                                     </select>
-                                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                                        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted">
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
                                             <path
                                                 fillRule="evenodd"
                                                 d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
@@ -117,11 +118,11 @@ export default function SettingsPage() {
 
                     {/* Data Section */}
                     <section>
-                        <p className="text-sm text-gray-500 mt-3 mb-3">Data</p>
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+                        <p className="text-sm text-muted mt-3 mb-3">Data</p>
+                        <div className="bg-card rounded-xl shadow-sm border border-border divide-y divide-border">
                             {/* Clear app cache */}
                             <div className="flex items-center justify-between px-6 py-4">
-                                <span className="text-sm text-gray-700">Hapus cache aplikasi</span>
+                                <span className="text-sm text-foreground">Hapus cache aplikasi</span>
                                 <button
                                     onClick={() => handleAction("clear-cache")}
                                     className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -132,7 +133,7 @@ export default function SettingsPage() {
 
                             {/* Clear local data */}
                             <div className="flex items-center justify-between px-6 py-4">
-                                <span className="text-sm text-gray-700">Hapus data lokal</span>
+                                <span className="text-sm text-foreground">Hapus data lokal</span>
                                 <button
                                     onClick={() => handleAction("clear-local")}
                                     className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -143,7 +144,7 @@ export default function SettingsPage() {
 
                             {/* Delete all analysis */}
                             <div className="flex items-center justify-between px-6 py-4">
-                                <span className="text-sm text-gray-700">Hapus semua analisis</span>
+                                <span className="text-sm text-foreground">Hapus semua analisis</span>
                                 <button
                                     onClick={() => handleAction("delete-analysis")}
                                     className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -156,10 +157,10 @@ export default function SettingsPage() {
 
                     {/* Account Section */}
                     <section>
-                        <p className="text-sm text-gray-500 mt-3 mb-3">Account</p>
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+                        <p className="text-sm text-muted mt-3 mb-3">Account</p>
+                        <div className="bg-card rounded-xl shadow-sm border border-border">
                             <div className="flex items-center justify-between px-6 py-4">
-                                <span className="text-sm text-gray-700">Keluar dari akun anda</span>
+                                <span className="text-sm text-foreground">Keluar dari akun anda</span>
                                 <button
                                     onClick={() => handleAction("logout")}
                                     className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -168,7 +169,7 @@ export default function SettingsPage() {
                                 </button>
                             </div>
                             <div className="flex items-center justify-between px-6 py-4">
-                                <span className="text-sm text-gray-700">Hapus akun Anda</span>
+                                <span className="text-sm text-foreground">Hapus akun Anda</span>
                                 <button
                                     onClick={() => handleAction("delete-account")}
                                     className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -184,13 +185,13 @@ export default function SettingsPage() {
             {/* Confirm Modal */}
             {showConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-                    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                    <div className="bg-card rounded-2xl shadow-xl p-6 w-full max-w-sm">
+                        <h2 className="text-lg font-semibold text-foreground mb-2">
                             {showConfirm === "logout"
                                 ? "Keluar Akun"
                                 : "Konfirmasi"}
                         </h2>
-                        <p className="text-sm text-gray-600 mb-6">
+                        <p className="text-sm text-muted mb-6">
                             {showConfirm === "logout"
                                 ? "Anda akan keluar dari akun ini dan kembali ke mode tamu."
                                 : "Apakah Anda yakin ingin melanjutkan tindakan ini? Tindakan ini tidak dapat dibatalkan."}
@@ -198,7 +199,7 @@ export default function SettingsPage() {
                         <div className="flex gap-3 justify-end">
                             <button
                                 onClick={() => setShowConfirm(null)}
-                                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                                className="px-4 py-2 text-sm rounded-lg border border-border text-foreground hover:bg-gray-50 transition-colors"
                             >
                                 Batal
                             </button>
