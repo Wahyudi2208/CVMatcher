@@ -91,6 +91,12 @@ export default function Sidebar({
             );
         }
 
+        if (path === "/profile") {
+            return pathname.startsWith(
+                "/profile"
+            );
+        }
+
         return pathname === path;
     };
 
