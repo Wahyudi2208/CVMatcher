@@ -1,34 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 interface UserProfile {
-    displayName: string;
+    name: string;
+    displayName: string | null;
     email: string;
-    password: string;
-    avatarUrl: string | null;
+    profileImage: string | null;
 }
 
-const initialProfile: UserProfile = {
-    displayName: "Budi Santoso",
-    email: "budi@perusahaan.com",
-    password: "ExamplePassword",
-    avatarUrl: null,
-};
 
 export default function ProfilePage() {
-    const [profile, setProfile] = useState<UserProfile>(initialProfile);
-    const [isEditing, setIsEditing] = useState(false);
-    const [form, setForm] = useState<UserProfile>(initialProfile);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
 
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAvatarChange = async (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+
         const file = e.target.files?.[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            setForm((prev) => ({ ...prev, avatarUrl: url }));
+
+        if (!file) return;
+
+        const formData = new FormData();
+
+        formData.append("photo", file);
+
+        try {
+
+            const token = localStorage.getItem("token");
+
+            const response = await fetch(
+                "http://localhost:5000/api/profile/photo",
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: formData
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error();
+            }
+
+            await fetchProfile();
+
+        } catch (error) {
+            console.error(error);
         }
     };
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const fetchProfile = async () => {
+        try {
+
+            const token = localStorage.getItem("token");
+
+            const response = await fetch(
+                "http://localhost:5000/api/profile",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            const data = await response.json();
+
+            setProfile(data);
+
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    if (!profile) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                Loading...
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background flex">
@@ -39,9 +96,9 @@ export default function ProfilePage() {
                     <div className="flex flex-col items-center mb-8">
                         <div className="relative mb-3">
                             <div className="w-36 h-36 rounded-full border-4 border-border bg-card flex items-center justify-center overflow-hidden">
-                                {form.avatarUrl ? (
+                                {profile.profileImage ? (
                                     <img
-                                        src={form.avatarUrl}
+                                        src={`http://localhost:5000${profile.profileImage}`}
                                         alt="Profile"
                                         className="w-full h-full object-cover"
                                     />
@@ -81,13 +138,12 @@ export default function ProfilePage() {
                             <input
                                 type="text"
                                 placeholder="ExampleName"
-                                value={isEditing ? form.displayName : profile.displayName}
-                                onChange={(e) => setForm((prev) => ({ ...prev, displayName: e.target.value }))}
-                                readOnly={!isEditing}
-                                className={`w-full rounded-lg border px-4 py-2.5 text-sm text-foreground placeholder:text-muted outline-none transition-colors ${isEditing
-                                    ? "border-blue-400 bg-card focus:ring-2 focus:ring-blue-100"
-                                    : "border-border bg-background cursor-default"
-                                    }`}
+                                value={
+                                    profile.displayName ||
+                                    profile.name.split(" ")[0]
+                                }
+                                readOnly
+                                className={`w-full rounded-lg border px-4 py-2.5 text-sm text-foreground placeholder:text-muted outline-none transition-colors`}
                             />
                         </div>
 
@@ -96,13 +152,9 @@ export default function ProfilePage() {
                             <input
                                 type="email"
                                 placeholder="email@example.com"
-                                value={isEditing ? form.email : profile.email}
-                                onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                                readOnly={!isEditing}
-                                className={`w-full rounded-lg border px-4 py-2.5 text-sm text-foreground placeholder:text-muted outline-none transition-colors ${isEditing
-                                    ? "border-blue-400 bg-card focus:ring-2 focus:ring-blue-100"
-                                    : "border-border bg-background cursor-default"
-                                    }`}
+                                value={profile.email}
+                                readOnly
+                                className={`w-full rounded-lg border px-4 py-2.5 text-sm text-foreground placeholder:text-muted outline-none transition-colors`}
                             />
                         </div>
                     </div>
@@ -110,7 +162,7 @@ export default function ProfilePage() {
                     {/* Actions */}
                     <div className="flex justify-end mt-10 gap-3">
                         <Link href="/profile/edit" className="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors">
-                            Edit profile
+                            Ubah profil
                         </Link>
                     </div>
                 </div>

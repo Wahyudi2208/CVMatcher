@@ -10,6 +10,10 @@ export const register = async (req, res) => {
     const errors = {}
 
     if (!name) errors.name = 'Nama wajib diisi'
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (name && !nameRegex.test(name)) {
+      errors.name = 'Nama hanya boleh huruf dan spasi';
+    }
     if (!email) errors.email = 'Email wajib diisi'
     if (!password) errors.password = 'Kata sandi wajib diisi'
 

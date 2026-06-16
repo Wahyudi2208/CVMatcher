@@ -27,7 +27,16 @@ export default function RegisterPage() {
 
     const validate = () => {
         const newErrors: Record<string, string> = {};
-        if (!form.name.trim()) newErrors.name = "Nama wajib diisi.";
+        if (!form.name.trim()) {
+            newErrors.name = "Nama wajib diisi.";
+        } else {
+            const nameRegex = /^[A-Za-z\s]+$/;
+
+            if (!nameRegex.test(form.name)) {
+                newErrors.name =
+                    "Nama hanya boleh huruf dan spasi.";
+            }
+        }
         if (!form.email.trim()) {
             newErrors.email = "Email wajib diisi.";
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {

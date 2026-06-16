@@ -109,3 +109,32 @@ input[type="password"] {
 .custom-swal-cancel:active {
   transform: scale(0.97) !important;
 }
+
+.custom-swal-confirm-profile {
+  cursor: pointer !important;
+  color: #fff !important;
+  border-radius: 14px !important;
+  padding: 12px 20px !important;
+  transition: all 0.15s ease !important;
+}
+
+.custom-swal-confirm-profile:active {
+  transform: scale(0.97) !important;
+}
+
+.custom-swal-cancel-profile {
+  cursor: pointer !important;
+  color: #fff !important;
+  border-radius: 14px !important;
+  padding: 12px 30px !important;
+  background: #6b7280 !important;
+  transition: all 0.15s ease !important;
+}
+
+.custom-swal-cancel-profile:hover {
+  background: #9ca3af !important;
+}
+
+.custom-swal-cancel:active {
+  transform: scale(0.97) !important;
+}
