@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "set NODE_OPTIONS=--max-old-space-size=2048 && next dev",
+    "clean": "rmdir /s /q .next",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

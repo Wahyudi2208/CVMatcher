@@ -264,7 +264,7 @@ export default function LoginPage() {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full py-3 rounded-lg text-white font-semibold text-sm tracking-wide transition hover:opacity-90 active:scale-[0.99]"
+                            className="w-full py-3 rounded-lg text-white font-semibold text-sm tracking-wide transition hover:opacity-90 active:scale-[0.99] cursor-pointer"
                             style={{ backgroundColor: "#1056a8" }}
                         >
                             Masuk
