@@ -208,8 +208,9 @@ def extract_text_from_docx(docx_path: str) -> str:
         combined = re.sub(r'\n{3,}', '\n\n', combined)
         return combined.strip()
     except ImportError:
-        print("  python-docx tidak terinstall. Jalankan: pip install python-docx")
-        return ""
+        raise RuntimeError(
+        "python-docx belum terinstall."
+    )
     except Exception as e:
         print(f"  Error membaca DOCX {docx_path}: {e}")
         return ""
@@ -737,6 +738,8 @@ def analyze_single(cv_input: str, jd_text: str, jd_title: str = "Posisi") -> Dic
         'reasoning':              reasoning,
         'matched_skills':         skill_match['matched_skills'],
         'unmatched_skills':       skill_match['unmatched_skills'],
+        'job_skills':             skill_match['jd_skills'],
+        'cv_skills':              skill_match['cv_skills'],
         'cv_text':                cv_text,
         'summary_recommendation': summary_rec,
         'report':                 report,
@@ -766,6 +769,8 @@ def analyze_batch(
         r['candidate_name']         = name
         r['matched_skills']         = sm['matched_skills']
         r['unmatched_skills']       = sm['unmatched_skills']
+        r['job_skills']             = sm['jd_skills']
+        r['cv_skills']              = sm['cv_skills']
         r['cv_text']                = cv_text
         r['summary_recommendation'] = generate_summary_recommendation(
             r, sm, name, jd_title
@@ -852,6 +857,8 @@ OUTPUT JSON UNTUK BACKEND:
   reasoning              → analisis singkat 1-2 kalimat
   matched_skills         → list skill yang sesuai dengan JD
   unmatched_skills       → list skill yang kurang/tidak ada di CV
+  jd_skills              → list seluruh skill requirement yang berhasil diekstrak dari Job Description
+  cv_skills              → list seluruh skill yang berhasil diekstrak dari CV kandidat
   cv_text                → isi teks CV (untuk ditampilkan di detail)
   summary_recommendation → rekomendasi lengkap 3-4 kalimat
   report                 → laporan teks lengkap (untuk export)

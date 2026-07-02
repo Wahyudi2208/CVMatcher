@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma.js'
 import { v4 as uuidv4 } from 'uuid'
 import { parseFile } from '../services/fileParser.js'
 import { calculateSimilarity } from '../utils/similarity.js'
+import { analyzeBatchCV } from '../services/aiService.js'
 
 export const createSession = async (req, res) => {
     try {
@@ -136,6 +137,21 @@ export const uploadJob = async (req, res) => {
 
         await prisma.jobDescriptionFile.create({ data })
 
+        let sessionTitle = "Manual Job Description";
+
+        if (req.file) {
+            sessionTitle = req.file.originalname.replace(/\.[^/.]+$/, "");
+        }
+
+        await prisma.uploadSession.update({
+            where: {
+                id: Number(sessionId)
+            },
+            data: {
+                title: sessionTitle
+            }
+        });
+
         res.json({
             message: 'Job description uploaded'
         })
@@ -207,34 +223,49 @@ export const analyzeSession = async (req, res) => {
             )
         }
 
-        // Parse CV Files
+        const aiResult = await analyzeBatchCV(
+            session.cvs,
+            jobText,
+            session.title
+        )
+
+        console.log(JSON.stringify(aiResult, null, 2))
+
         const analyzedCVs = []
 
-        for (const cv of session.cvs) {
-
-            const text = await parseFile(
-                cv.filePath,
-                cv.fileType
+        for (const candidate of aiResult.ranked) {
+            console.log('DATABASE CVS:')
+            console.log(session.cvs)
+            console.log('AI RESULT:')
+            console.log(candidate.id)
+            const cv = session.cvs.find(
+                item => item.filePath.endsWith(candidate.id)
             )
 
-            // Hitung Similarity
-            const score = calculateSimilarity(
-                jobText,
-                text
+            if (!cv) continue
+
+            const cvText = await parseFile(
+                cv.filePath,
+                cv.fileType
             )
 
             analyzedCVs.push({
                 id: cv.id,
                 fileName: cv.fileName,
-                score
+                score: candidate.final_score
             })
 
-            // Simpan hasil ke database
             await prisma.analysisResult.create({
                 data: {
                     sessionId: session.id,
                     cvFileId: cv.id,
-                    score
+                    score: candidate.final_score,
+                    label: candidate.label?.[0],
+                    reasoning: candidate.reasoning,
+                    candidateName: candidate.candidate_name,
+                    matchedSkills: candidate.matched_skills,
+                    unmatchedSkills: candidate.unmatched_skills,
+                    cvContent: cvText
                 }
             })
         }
@@ -267,9 +298,25 @@ export const analyzeSession = async (req, res) => {
 export const getResults = async (req, res) => {
     try {
         const { sessionId } = req.params
+
         if (isNaN(Number(sessionId))) {
             return res.status(400).json({
                 error: 'Invalid session ID'
+            })
+        }
+
+        const session = await prisma.uploadSession.findUnique({
+            where: {
+                id: Number(sessionId)
+            },
+            include: {
+                job: true
+            }
+        })
+
+        if (!session) {
+            return res.status(404).json({
+                error: 'Session not found'
             })
         }
 
@@ -278,7 +325,12 @@ export const getResults = async (req, res) => {
                 sessionId: Number(sessionId)
             },
             include: {
-                cvFile: true
+                cvFile: true,
+                session: {
+                    select: {
+                        title: true
+                    }
+                }
             },
             orderBy: {
                 score: 'desc'
@@ -287,6 +339,7 @@ export const getResults = async (req, res) => {
 
         res.json({
             message: 'Results fetched successfully',
+            jobDescription: session.job,
             results
         })
 
@@ -300,7 +353,6 @@ export const getResults = async (req, res) => {
 export const getSession = async (req, res) => {
     try {
         const { sessionId } = req.params
-
         const session =
             await prisma.uploadSession.findUnique({
                 where: {
@@ -325,9 +377,109 @@ export const getSession = async (req, res) => {
 
     } catch (error) {
         console.error(error)
-
         res.status(500).json({
             error: error.message
         })
     }
 }
+
+export const getResultDetail = async (req, res) => {
+    try {
+        const { resultId } = req.params
+        const result =
+            await prisma.analysisResult.findUnique({
+                where: {
+                    id: Number(resultId)
+                },
+                include: {
+                    cvFile: true
+                }
+            })
+
+        if (!result) {
+            return res.status(404).json({
+                error: 'Result not found'
+            })
+        }
+
+        res.json(result)
+
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
+
+export const getHistory = async (req, res) => {
+    try {
+        const histories =
+            await prisma.uploadSession.findMany({
+                where: {
+                    userId: req.user.id,
+                    status: "PROCESSED"
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    createdAt: true
+                },
+                orderBy: {
+                    createdAt: "desc"
+                }
+
+            });
+
+        res.json(histories);
+
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        });
+    }
+};
+
+export const renameHistory = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const { title } = req.body;
+        await prisma.uploadSession.update({
+            where: {
+                id: Number(sessionId)
+            },
+            data: {
+                title
+            }
+        });
+
+        res.json({
+            message: "History renamed"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        });
+    }
+};
+
+export const deleteHistory = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        await prisma.uploadSession.delete({
+            where: {
+                id: Number(sessionId)
+            }
+
+        });
+
+        res.json({
+            message: "History deleted"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        });
+    }
+};

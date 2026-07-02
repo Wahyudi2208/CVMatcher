@@ -172,7 +172,6 @@ export default function UploadPage() {
         e.preventDefault();
 
         try {
-
             // Validation
             if (uploadedFiles.length === 0) {
                 alert("Minimal upload 1 CV");
@@ -195,6 +194,8 @@ export default function UploadPage() {
                 headers.Authorization = `Bearer ${token}`;
             }
 
+            console.log("TOKEN :", token);
+            console.log("HEADERS :", headers);
             // Create Session
             const sessionRes = await fetch(
                 "http://localhost:5000/api/upload/session",
@@ -597,12 +598,12 @@ export default function UploadPage() {
                                         disabled={!!jobDescriptionFile}
                                         onChange={(e) => {
                                             if (jobDescriptionFile) return;
-                                            if (e.target.value.length <= 2000) {
+                                            if (e.target.value.length <= 10000) {
                                                 setJobDescription(e.target.value);
                                             }
                                         }}
                                         placeholder={"Contoh:\n\nKami mencari Software Engineer dengan pengalaman minimal 3 tahun di..."}
-                                        maxLength={2000}
+                                        maxLength={10000}
                                         className="w-full min-h-[220px] sm:min-h-[260px] resize-none border border-border rounded-xl p-4 text-sm text-foreground bg-card placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                     />
 
@@ -612,7 +613,7 @@ export default function UploadPage() {
                                         </span>
 
                                         <span className="text-xs text-muted">
-                                            {jobDescription.length}/2,000
+                                            {jobDescription.length}/10,000
                                         </span>
                                     </div>
                                 </div>

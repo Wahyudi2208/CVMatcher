@@ -165,6 +165,10 @@ async def analyze_batch_endpoint(
             tmp_paths.append(tmp_path)
             cv_text = load_cv(tmp_path)
             cv_list.append({'id': cv.filename, 'text': cv_text})
+            print("========== CV ==========")
+            print("Filename :", cv.filename) 
+            print("Text len :", len(cv_text))
+            print("========================")
 
         result = analyze_batch(
             cv_inputs   = cv_list,
