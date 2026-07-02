@@ -17,6 +17,14 @@ export default function CoreLayout({
     const [userName, setUserName] =
         useState("Tamu");
 
+    interface HistoryItem {
+        id: number;
+        title: string;
+        createdAt: string;
+    }
+
+    const [history, setHistory] = useState<HistoryItem[]>([]);
+
     useEffect(() => {
         const saved =
             localStorage.getItem("desktopSidebarOpen");
@@ -29,25 +37,80 @@ export default function CoreLayout({
     }, []);
 
     useEffect(() => {
-        const user =
-            localStorage.getItem("user");
+        const syncUser = () => {
+            const user =
+                localStorage.getItem("user");
 
-        if (user) {
+            if (!user) {
+                setIsLoggedIn(false);
+                setUserName("Tamu");
+                return;
+
+            }
             try {
                 const parsed =
                     JSON.parse(user);
-
                 setIsLoggedIn(true);
-
-                if (parsed?.name) {
-                    setUserName(parsed.name);
-                }
-            } catch {
+                setUserName(
+                    parsed.name
+                );
+            }
+            catch {
                 setIsLoggedIn(false);
                 setUserName("Tamu");
             }
-        }
+        };
+        syncUser();
+
+        window.addEventListener(
+            "focus",
+            syncUser
+        );
+
+        return () => {
+
+            window.removeEventListener(
+                "focus",
+                syncUser
+            );
+        };
     }, []);
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            const token =
+                localStorage.getItem("token");
+
+            if (!token) {
+                setHistory([]);
+                return;
+            }
+
+            try {
+                const res = await fetch(
+                    "http://localhost:5000/api/upload/history",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                if (!res.ok) return;
+
+                const data =
+                    await res.json();
+                setHistory(data);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        if (isLoggedIn) {
+            fetchHistory();
+        }
+
+    }, [isLoggedIn]);
 
     return (
         <>
@@ -60,6 +123,7 @@ export default function CoreLayout({
                 }
                 isLoggedIn={isLoggedIn}
                 userName={userName}
+                history={history}
             />
 
             <main
