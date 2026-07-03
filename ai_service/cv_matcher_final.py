@@ -440,8 +440,117 @@ def rank_cvs(
 print("✅ Hybrid Scorer & Ranker ready!")
 
 # ============================================================
-# CELL 6: CANDIDATE NAME + SKILL MATCH + SUMMARY REC
+# CELL 6: CANDIDATE NAME + DYNAMIC SKILL MATCH + SUMMARY REC
 # ============================================================
+
+import re
+from typing import List, Dict, Tuple
+
+
+# ── FIX 1: Truncate JD ke bagian Requirements/Kualifikasi saja ──
+
+_JD_SKILL_HEADINGS = [
+    r'requirements?', r'qualifications?', r'preferred\s+qualifications?',
+    r'kualifikasi', r'persyaratan', r'skills?\s*(required|needed)?',
+    r'keahlian', r'kompetensi', r'what\s+you.?ll\s+need',
+    r'what\s+we.?re\s+looking\s+for', r'nice\s+to\s+have', r'good\s+to\s+have',
+]
+
+# PENTING: semua heading pakai bentuk jamak opsional (s?)
+# supaya "Benefit" maupun "Benefits" sama-sama ke-detect
+_JD_STOP_HEADINGS = [
+    r'benefits?', r'fasilitas', r'compensation', r'gaji', r'perks?',
+    r'tentang\s*(kami|perusahaan)', r'about\s*(us|the\s*role)?',
+    r'responsibilities?', r'tanggung\s*jawab', r'job\s*desc(ription)?',
+    r'how\s*to\s*apply', r'cara\s*melamar', r'why\s+join',
+]
+
+
+def truncate_jd_to_requirements(jd_text: str) -> str:
+    """
+    Ambil HANYA teks di bagian skill-relevant (Requirements,
+    Preferred Qualifications, dll), buang Responsibilities & Benefits.
+
+    v5: mencari posisi heading di SELURUH teks via regex.finditer,
+    bukan cek baris-per-baris. Ini jauh lebih tahan terhadap variasi
+    format paste — heading tidak harus sendirian persis di satu baris.
+
+    Kalau JD sama sekali tidak punya heading yang dikenali,
+    kembalikan teks asli (tidak di-truncate).
+    """
+    skill_pattern = (
+        r'(?im)^[^\S\r\n]*[^a-zA-Z0-9\n]*\s*(' +
+        '|'.join(_JD_SKILL_HEADINGS) +
+        r')\s*:?[^\S\r\n]*$'
+    )
+    stop_pattern = (
+        r'(?im)^[^\S\r\n]*[^a-zA-Z0-9\n]*\s*(' +
+        '|'.join(_JD_STOP_HEADINGS) +
+        r')\s*:?[^\S\r\n]*$'
+    )
+
+    skill_matches = list(re.finditer(skill_pattern, jd_text))
+    stop_matches  = list(re.finditer(stop_pattern, jd_text))
+
+    # Fallback longgar kalau heading tidak sendirian di baris
+    # (misal nempel dengan teks lain karena hasil paste/copy web)
+    if not skill_matches:
+        loose_skill = r'(?im)\b(' + '|'.join(_JD_SKILL_HEADINGS) + r')\b\s*:?'
+        skill_matches = list(re.finditer(loose_skill, jd_text))
+    if not skill_matches:
+        return jd_text  # tidak ada heading sama sekali, jangan truncate
+
+    if not stop_matches:
+        loose_stop = r'(?im)\b(' + '|'.join(_JD_STOP_HEADINGS) + r')\b\s*:?'
+        stop_matches = list(re.finditer(loose_stop, jd_text))
+
+    result_parts = []
+    for sm in skill_matches:
+        start = sm.end()
+        next_stops = [stm.start() for stm in stop_matches if stm.start() > start]
+        end = min(next_stops) if next_stops else len(jd_text)
+
+        # Jangan overlap ke skill-heading berikutnya
+        next_skills = [s.start() for s in skill_matches if s.start() > start]
+        if next_skills:
+            end = min(end, max(next_skills))
+
+        chunk = jd_text[start:end].strip()
+        if chunk:
+            result_parts.append(chunk)
+
+    combined = '\n'.join(result_parts)
+    return combined if combined.strip() else jd_text
+
+
+# ── FIX 2: Split baris jadi frasa bersih, handle bullet di tengah kalimat ──
+
+def clean_line_edges(line: str) -> str:
+    """Bersihkan karakter non-alfanumerik di awal & akhir baris."""
+    line = re.sub(r'^[^a-zA-Z0-9]+', '', line)
+    line = re.sub(r'[^a-zA-Z0-9\)]+$', '', line)
+    return line.strip()
+
+
+def split_into_clean_phrases(text: str) -> List[str]:
+    phrases = []
+    for raw_line in text.split('\n'):
+        sub_lines = re.split(r'\s*[•\u2022\*]\s*', raw_line)
+        for sub in sub_lines:
+            sub = clean_line_edges(sub)
+            if not sub:
+                continue
+            if sub.count('.') >= 1 and len(sub.split()) > 8:
+                sentence_parts = re.split(r'\.\s+', sub)
+            else:
+                sentence_parts = [sub]
+            for sentence in sentence_parts:
+                parts = re.split(r',\s*|\s+(?:and|dan)\s+', sentence)
+                for p in parts:
+                    p = clean_line_edges(p)
+                    if p and 1 <= len(p.split()) <= 8:
+                        phrases.append(p)
+    return phrases
 
 def extract_candidate_name(cv_text: str) -> str:
     """Extract nama kandidat dari baris pertama CV."""
@@ -473,72 +582,266 @@ def extract_candidate_name(cv_text: str) -> str:
     return "Tidak Diketahui"
 
 
-_SKILL_PATTERNS = [
-    r'\bpython\b', r'\bjava\b(?!script)', r'\bjavascript\b', r'\btypescript\b',
-    r'\bc\+\+\b', r'\bc#\b', r'\bphp\b', r'\bruby\b', r'\bkotlin\b',
-    r'\bswift\b', r'\brust\b', r'\bscala\b', r'\bmatlab\b', r'\bvba\b',
-    r'\breact(?:\.js)?\b', r'\bvue(?:\.js)?\b', r'\bangular\b', r'\bnext(?:\.js)?\b',
-    r'\bhtml\b', r'\bcss\b', r'\bbootstrap\b', r'\btailwind\b', r'\bjquery\b',
-    r'\bnode(?:\.js)?\b', r'\bexpress(?:\.js)?\b', r'\bdjango\b', r'\bflask\b',
-    r'\bfastapi\b', r'\blaravel\b', r'\basp\.net\b',
-    r'\bsql\b', r'\bmysql\b', r'\bpostgresql\b', r'\bmongodb\b', r'\bredis\b',
-    r'\belasticsearch\b', r'\boracle\b', r'\bsqlite\b', r'\bfirebase\b',
-    r'\btensorflow\b', r'\bpytorch\b', r'\bscikit-learn\b', r'\bkeras\b',
-    r'\bnlp\b', r'\bmachine\s+learning\b', r'\bdeep\s+learning\b', r'\bdata\s+science\b',
-    r'\baws\b', r'\bgcp\b', r'\bazure\b', r'\bdocker\b', r'\bkubernetes\b',
-    r'\bci/cd\b', r'\bjenkins\b', r'\bgit\b', r'\blinux\b', r'\bterraform\b',
-    r'\bexcel\b', r'\btableau\b', r'\bpower\s+bi\b', r'\bpandas\b',
-    r'\bnumpy\b', r'\bspark\b', r'\bhadoop\b', r'\bairflow\b',
-    r'\bsap\b', r'\bcrm\b', r'\berp\b', r'\bjira\b', r'\bscrum\b',
-    r'\bagile\b', r'\bpmp\b', r'\bkanban\b',
-    r'\bfigma\b', r'\bui/ux\b', r'\bsketch\b',
-    r'\baccounting\b', r'\baudit\b', r'\btaxation\b', r'\bcpa\b',
-    r'\bifrs\b', r'\bpsak\b', r'\bfinancial\s+(?:analysis|reporting|modeling)\b',
-    r'\brest\s*api\b', r'\bgraphql\b', r'\bmicroservices\b', r'\bwebsocket\b',
-    r'\bperpajakan\b', r'\bakuntansi\b', r'\banalisis\s+data\b',
+# ------------------------------------------------------------
+# DYNAMIC SKILL EXTRACTION (domain-agnostic, lokal, tanpa hardcoded list)
+# ------------------------------------------------------------
+
+_STOPWORDS_ID_EN = {
+    'dan', 'atau', 'yang', 'untuk', 'dengan', 'dari', 'pada', 'ini', 'itu',
+    'kami', 'anda', 'kandidat', 'pelamar', 'minimal', 'maksimal', 'wajib',
+    'diutamakan', 'memiliki', 'mampu', 'dapat', 'bisa', 'berpengalaman',
+    'pengalaman', 'kualifikasi', 'persyaratan', 'tanggung', 'jawab',
+    'tugas', 'deskripsi', 'pekerjaan', 'lamaran', 'lowongan', 'posisi',
+    'tahun', 'min', 'max', 'usia', 'pria', 'wanita', 'domisili',
+    'and', 'or', 'the', 'a', 'an', 'for', 'with', 'from', 'to', 'of', 'in',
+    'is', 'are', 'be', 'will', 'must', 'should', 'have', 'has', 'having',
+    'strong', 'good', 'excellent', 'basic', 'advanced', 'proficient',
+    'familiar', 'knowledge', 'understanding', 'ability', 'able', 'skills',
+    'skill', 'experience', 'experienced', 'required', 'requirement',
+    'requirements', 'responsibilities', 'responsibility', 'qualification',
+    'qualifications', 'job', 'description', 'candidate', 'candidates',
+    'years', 'year', 'minimum', 'maximum', 'preferred', 'plus', 'etc',
+    'about', 'company', 'team', 'work', 'working', 'role', 'position',
+    'we', 'you', 'our', 'your', 'as', 'at', 'by', 'on', 'level', 'entry',
+}
+
+_HEADER_PATTERNS = [
+    r'^(kualifikasi|persyaratan|requirements?|qualifications?)\s*:?$',
+    r'^(tanggung\s*jawab|responsibilities?|job\s*desc(ription)?)\s*:?$',
+    r'^(about\s*(us|the\s*role)?|tentang)\s*:?$',
+    r'^(benefit|fasilitas|compensation)s?\s*:?$',
 ]
 
-_SKILL_DISPLAY = {
-    'sql': 'SQL', 'aws': 'AWS', 'gcp': 'GCP', 'nlp': 'NLP',
-    'html': 'HTML', 'css': 'CSS', 'rest api': 'REST API', 'ci/cd': 'CI/CD',
-    'ui/ux': 'UI/UX', 'sap': 'SAP', 'crm': 'CRM', 'erp': 'ERP',
-    'pmp': 'PMP', 'cpa': 'CPA', 'vba': 'VBA', 'ifrs': 'IFRS', 'psak': 'PSAK',
-    'power bi': 'Power BI', 'machine learning': 'Machine Learning',
-    'deep learning': 'Deep Learning', 'data science': 'Data Science',
-    'rest api': 'REST API', 'financial analysis': 'Financial Analysis',
-    'financial reporting': 'Financial Reporting',
+_INTRO_NOISE = re.compile(
+    r'^(we are looking for|we\'re looking for|looking for|'
+    r'\d+\+?\s*years?\s+experience|kami (sedang )?mencari|dibutuhkan|'
+    r'kami (adalah|merupakan))',
+    re.IGNORECASE
+)
+
+_LEAD_PHRASES = re.compile(
+    r'^(proficiency in|experience (in|with)|knowledge of|familiarity with|'
+    r'familiar with|understanding of|expertise in|menguasai|memahami)\s+',
+    re.IGNORECASE
+)
+
+_BULLET_PREFIX = re.compile(r'^[\-\*\•\u2022\d\.\)]+\s*')
+
+# ------------------------------------------------------------
+# OPSI A: Section markers untuk JD (mirip SECTION_KEYWORDS tapi untuk JD)
+# ------------------------------------------------------------
+_JD_SKILL_SECTION_MARKERS = [
+    r'kualifikasi', r'persyaratan', r'requirements?', r'qualifications?',
+    r'skills?\s*(required|needed)?', r'keahlian', r'kompetensi',
+]
+
+_JD_NON_SKILL_SECTION_MARKERS = [
+    r'tanggung\s*jawab', r'responsibilities?', r'job\s*desc(ription)?',
+    r'tugas', r'benefit', r'fasilitas', r'compensation', r'gaji',
+    r'tentang\s*(kami|perusahaan)', r'about\s*(us|the\s*role)?',
+    r'cara\s*melamar', r'how\s*to\s*apply', r'kontak', r'contact',
+]
+
+# ------------------------------------------------------------
+# OPSI B: Pola kategori noise (bukan kata spesifik, tapi pola/kategori)
+# ------------------------------------------------------------
+_CATEGORY_NOISE_PATTERNS = [
+    r'\b(bachelor|master|phd|diploma|degree|gelar|sarjana|s1|s2|s3|d3|d4)\b',
+    r'\d+\+?\s*(years?|tahun|yrs?)\b',
+    r'\b(minimum|minimal|at least|setidaknya)\s+\d+',
+    r'\b(gaji|salary|kirim\s*(cv|lamaran)|lokasi|domisili|jam\s*kerja|kontak|hubungi)\b',
+    r'\b(usia|umur|jenis\s*kelamin|pria|wanita)\b',
+]
+_CATEGORY_NOISE_RE = re.compile('|'.join(_CATEGORY_NOISE_PATTERNS), re.IGNORECASE)
+
+_SOFT_SKILL_NOISE = {
+    'jujur', 'teliti', 'disiplin', 'tanggung jawab', 'komunikatif',
+    'team player', 'mampu bekerja dalam tim', 'kerja keras', 'proaktif',
+    'honest', 'meticulous', 'hardworking', 'team work', 'communication skills',
+    'under pressure', 'able to work under pressure', 'fast learner',
+    'attention to detail', 'time management', 'problem solving',
 }
 
 
-def _extract_skills(text: str) -> set:
-    found = set()
-    text_lower = text.lower()
-    for pattern in _SKILL_PATTERNS:
-        for match in re.findall(pattern, text_lower):
-            skill = match.strip()
-            if skill:
-                found.add(skill)
-    return found
+def _clean_phrase(raw: str) -> str:
+    text = _BULLET_PREFIX.sub('', raw).strip()
+    text = re.sub(r'[:.]+$', '', text).strip()
+    return text
 
 
-def _fmt_skills(skills: list) -> List[str]:
-    return [_SKILL_DISPLAY.get(s, s.title()) for s in sorted(skills)]
+def _is_noise(phrase: str) -> bool:
+    low = phrase.lower().strip()
+    if not low:
+        return True
+    if any(re.match(p, low) for p in _HEADER_PATTERNS):
+        return True
+    if _INTRO_NOISE.match(low):
+        return True
+    if _CATEGORY_NOISE_RE.search(low):
+        return True
+    if low in _SOFT_SKILL_NOISE:
+        return True
+    if re.fullmatch(r'[\d\s\-\.,]+', low):
+        return True
+    word_count = len(low.split())
+    if word_count == 0 or word_count > 12:
+        return True
+    return False
 
 
-def match_skills(cv_text: str, jd_text: str) -> Dict[str, List[str]]:
+def _strip_leading_trailing_stopwords(phrase: str) -> str:
+    words = phrase.split()
+    while words and words[0].lower() in _STOPWORDS_ID_EN:
+        words.pop(0)
+    while words and words[-1].lower() in _STOPWORDS_ID_EN:
+        words.pop()
+    return ' '.join(words)
+
+
+def _split_jd_into_sections(jd_text: str) -> List[Tuple[str, bool]]:
     """
-    Bandingkan skill di CV vs JD.
-    Returns: matched_skills, unmatched_skills, cv_skills, jd_skills
+    Pecah JD jadi blok section. Return list of (line, is_skill_relevant_section).
+    True = baris di bawah heading Kualifikasi/Requirements/Skills.
+    False = baris di bawah heading Tanggung Jawab/Benefit/dll (dibuang).
+    Kalau JD tidak berheading, semua baris dianggap relevan (fallback ke Opsi B).
     """
-    jd_skills = _extract_skills(jd_text)
-    cv_skills  = _extract_skills(cv_text)
-    matched    = jd_skills & cv_skills
-    unmatched  = jd_skills - cv_skills
+    lines = re.split(r'[\n\r]+', jd_text)
+    result = []
+    current_relevant = True
+    has_any_heading = False
+
+    for line in lines:
+        stripped = line.strip()
+        low = stripped.lower().rstrip(':')
+
+        is_skill_heading = any(re.match(p, low) for p in _JD_SKILL_SECTION_MARKERS) and len(low.split()) <= 4
+        is_non_skill_heading = any(re.match(p, low) for p in _JD_NON_SKILL_SECTION_MARKERS) and len(low.split()) <= 4
+
+        if is_skill_heading:
+            current_relevant = True
+            has_any_heading = True
+            continue
+        if is_non_skill_heading:
+            current_relevant = False
+            has_any_heading = True
+            continue
+
+        result.append((line, current_relevant))
+
+    if not has_any_heading:
+        return [(line, True) for line in lines]
+
+    return result
+
+
+def extract_candidate_phrases_from_jd(jd_text: str) -> List[str]:
+    if not jd_text:
+        return []
+
+    jd_text = truncate_jd_to_requirements(jd_text)          # FIX 1
+    raw_phrases = split_into_clean_phrases(jd_text)         # FIX 2
+
+    candidates = []
+    for phrase in raw_phrases:
+        phrase = _LEAD_PHRASES.sub('', phrase)
+        phrase = _strip_leading_trailing_stopwords(phrase)
+        if not phrase or _is_noise(phrase):
+            continue
+        candidates.append(phrase)
+
+    seen, unique_candidates = set(), []
+    for c in candidates:
+        key = c.lower()
+        if key not in seen:
+            seen.add(key)
+            unique_candidates.append(c)
+
+    return unique_candidates
+
+
+def _split_cv_sentences(cv_text: str) -> List[str]:
+    """Pecah CV per baris DAN per item koma, supaya skill-list tidak 'diencerkan'."""
+    if not cv_text:
+        return []
+    lines = re.split(r'[\n\r]+', cv_text)
+    sentences = []
+    for line in lines:
+        line = _BULLET_PREFIX.sub('', line).strip()
+        if len(line) <= 2:
+            continue
+        sentences.append(line)
+        if ',' in line and len(line.split()) <= 15:
+            for part in re.split(r',\s*', line):
+                part = part.strip(' .')
+                if part and part.lower() != line.lower():
+                    sentences.append(part)
+    return sentences
+
+
+def semantic_match_phrases(
+    jd_phrases: List[str],
+    cv_text:    str,
+    threshold:  float = 0.60,
+    model=None,
+) -> Tuple[List[str], List[str], Dict[str, float]]:
+    """Cosine similarity (sklearn) antara frasa kandidat JD vs kalimat CV, pakai SBERT."""
+    if model is None:
+        model = _sbert_model
+
+    cv_sentences = _split_cv_sentences(cv_text)
+    if not jd_phrases or not cv_sentences:
+        return [], jd_phrases, {}
+
+    jd_embeddings = model.encode(jd_phrases, convert_to_numpy=True)
+    cv_embeddings = model.encode(cv_sentences, convert_to_numpy=True)
+    sim_matrix = cosine_similarity(jd_embeddings, cv_embeddings)
+
+    matched, unmatched, scores = [], [], {}
+    for i, phrase in enumerate(jd_phrases):
+        best_score = float(sim_matrix[i].max())
+        scores[phrase] = round(best_score, 4)
+        if best_score >= threshold:
+            matched.append(phrase)
+        else:
+            unmatched.append(phrase)
+
+    return matched, unmatched, scores
+
+
+def _format_skill_display(phrase: str) -> str:
+    """Title Case untuk frasa umum, UPPERCASE untuk akronim pendek."""
+    words = phrase.split()
+    formatted = []
+    for w in words:
+        core = re.sub(r'[^\w]', '', w)
+        if core.isupper() and 1 < len(core) <= 5:
+            formatted.append(core)
+        elif len(core) <= 4 and w.isupper():
+            formatted.append(core.upper())
+        else:
+            formatted.append(w.capitalize())
+    return ' '.join(formatted)
+
+
+def match_skills(cv_text: str, jd_text: str, threshold: float = 0.72) -> Dict[str, List[str]]:
+    """
+    Dynamic Skill Extraction (section-aware + kategori-noise filter) + SBERT Semantic Filtering.
+    Returns: matched_skills, unmatched_skills, jd_skills, similarity_scores
+    """
+    jd_phrases = extract_candidate_phrases_from_jd(jd_text)
+    matched_raw, unmatched_raw, scores = semantic_match_phrases(
+        jd_phrases, cv_text, threshold=threshold
+    )
+
+    matched   = sorted({_format_skill_display(p) for p in matched_raw})
+    unmatched = sorted({_format_skill_display(p) for p in unmatched_raw})
+    all_jd    = sorted({_format_skill_display(p) for p in jd_phrases})
+
     return {
-        'matched_skills':   _fmt_skills(list(matched)),
-        'unmatched_skills': _fmt_skills(list(unmatched)),
-        'cv_skills':        _fmt_skills(list(cv_skills)),
-        'jd_skills':        _fmt_skills(list(jd_skills)),
+        'matched_skills':    matched,
+        'unmatched_skills':  unmatched,
+        'jd_skills':         all_jd,
+        'similarity_scores': scores,
     }
 
 
@@ -573,16 +876,12 @@ def generate_summary_recommendation(
     if matched:
         skill_str = ', '.join(matched[:5])
         suffix    = f" dan {len(matched) - 5} skill lainnya" if len(matched) > 5 else ""
-        sentences.append(
-            f"Kandidat memiliki skill yang sesuai: {skill_str}{suffix}."
-        )
+        sentences.append(f"Kandidat memiliki skill yang sesuai: {skill_str}{suffix}.")
 
     if unmatched:
         gap_str = ', '.join(unmatched[:4])
         suffix  = f" dan {len(unmatched) - 4} lainnya" if len(unmatched) > 4 else ""
-        sentences.append(
-            f"Skill yang belum terdeteksi di CV namun dibutuhkan JD: {gap_str}{suffix}."
-        )
+        sentences.append(f"Skill yang belum terdeteksi di CV namun dibutuhkan JD: {gap_str}{suffix}.")
 
     if final_score >= MATCH_THRESHOLDS['strong']:
         sentences.append(
@@ -603,8 +902,7 @@ def generate_summary_recommendation(
     return ' '.join(sentences)
 
 
-print("✅ Cell 6: Name extractor, skill matcher, summary recommendation ready!")
-
+print("✅ Cell 6 (final v2): Section-aware + category-noise dynamic skill matcher ready!")
 # ============================================================
 # CELL 7: RANKING REPORT + PUBLIC API
 # ============================================================
