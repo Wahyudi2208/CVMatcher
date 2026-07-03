@@ -74,6 +74,12 @@ model AnalysisResult {
   id         Int      @id @default(autoincrement())
 
   score      Float
+  label      String?  @db.VarChar(100)
+  reasoning  String?  @db.Text
+  candidateName   String? @map("candidate_name") @db.VarChar(255)
+  matchedSkills   Json?   @map("matched_skills")
+  unmatchedSkills Json?   @map("unmatched_skills")
+  cvContent  String?  @map("cv_content") @db.LongText
   createdAt  DateTime @default(now()) @map("created_at")
 
   sessionId  Int      @map("session_id")

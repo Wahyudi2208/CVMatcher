@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import Swal from "sweetalert2";
 
 type Language = "Indonesia" | "English";
 
@@ -12,34 +13,136 @@ interface SettingsState {
 
 export default function SettingsPage() {
     const router = useRouter();
-    const { theme, setTheme } = useTheme();
+    const { theme, setTheme, resolvedTheme } = useTheme();
     const [settings, setSettings] = useState<SettingsState>({
         language: "Indonesia",
     });
 
-    const [showConfirm, setShowConfirm] = useState<string | null>(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    const handleAction = (action: string) => {
-        setShowConfirm(action);
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        setIsLoggedIn(!!token);
+    }, []);
+
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const handleLogout = async () => {
+
+        const result = await Swal.fire({
+            icon: "warning",
+            title: "Keluar Akun?",
+            text: "Anda akan keluar dari akun ini dan kembali ke mode tamu.",
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonText: "Keluar",
+            cancelButtonText: "Batal",
+            customClass: {
+                popup: "custom-swal-popup",
+                actions: "custom-swal-actions",
+                confirmButton: "custom-swal-confirm-logout",
+                cancelButton: "custom-swal-cancel",
+            },
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("currentSessionId");
+
+        router.replace("/landing_page");
     };
 
-    const handleConfirm = () => {
+    const handleDeleteAccount = async () => {
 
-        if (showConfirm === "logout") {
+        const result = await Swal.fire({
+            icon: "warning",
+            title: "Hapus Akun?",
+            text: "Akun dan seluruh riwayat analisis Anda akan dihapus permanen.",
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonText: "Hapus Akun",
+            cancelButtonText: "Batal",
+            customClass: {
+                popup: "custom-swal-popup",
+                actions: "custom-swal-actions",
+                confirmButton: "custom-swal-confirm",
+                cancelButton: "custom-swal-cancel",
+            },
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        try {
+
+            const token =
+                localStorage.getItem("token");
+
+            const response =
+                await fetch(
+                    "http://localhost:5000/api/user/delete",
+                    {
+                        method: "DELETE",
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message
+                );
+            }
+
+            await Swal.fire({
+                icon: "success",
+                title: "Berhasil",
+                text: "Akun berhasil dihapus.",
+                customClass: {
+                    popup: "custom-swal-popup",
+                    confirmButton: "custom-swal-confirm-delete",
+                },
+            });
 
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             localStorage.removeItem("currentSessionId");
 
-            router.push("/landing_page");
+            router.replace("/landing_page");
 
-            return;
+        } catch (error) {
+
+            console.error(error);
+
+            Swal.fire({
+                icon: "error",
+                title: "Gagal",
+                text: "Gagal menghapus akun.",
+                customClass: {
+                    popup: "custom-swal-popup",
+                    confirmButton: "custom-swal-confirm",
+                },
+            });
         }
-
-        console.log(`Action confirmed: ${showConfirm}`);
-
-        setShowConfirm(null);
     };
+
+    if (!mounted) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen bg-background px-4 py-8 sm:px-8 md:px-16 lg:px-24">
@@ -87,7 +190,11 @@ export default function SettingsPage() {
                                 <span className="text-sm text-foreground">Tema</span>
                                 <div className="relative">
                                     <select
-                                        value={theme}
+                                        value={
+                                            theme === "system"
+                                                ? "system"
+                                                : resolvedTheme
+                                        }
                                         onChange={(e) =>
                                             setTheme(e.target.value)
                                         }
@@ -120,22 +227,17 @@ export default function SettingsPage() {
                     <section>
                         <p className="text-sm text-muted mt-3 mb-3">Data</p>
                         <div className="bg-card rounded-xl shadow-sm border border-border divide-y divide-border">
-                            {/* Clear app cache */}
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <span className="text-sm text-foreground">Hapus cache aplikasi</span>
-                                <button
-                                    onClick={() => handleAction("clear-cache")}
-                                    className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
-                                >
-                                    Hapus
-                                </button>
-                            </div>
-
                             {/* Clear local data */}
                             <div className="flex items-center justify-between px-6 py-4">
                                 <span className="text-sm text-foreground">Hapus data lokal</span>
                                 <button
-                                    onClick={() => handleAction("clear-local")}
+                                    onClick={() =>
+                                        Swal.fire(
+                                            "Coming Soon",
+                                            "Fitur belum diimplementasikan.",
+                                            "info"
+                                        )
+                                    }
                                     className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
                                 >
                                     Hapus
@@ -143,78 +245,54 @@ export default function SettingsPage() {
                             </div>
 
                             {/* Delete all analysis */}
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <span className="text-sm text-foreground">Hapus semua analisis</span>
-                                <button
-                                    onClick={() => handleAction("delete-analysis")}
-                                    className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
-                                >
-                                    Hapus
-                                </button>
-                            </div>
+                            {isLoggedIn && (
+                                <div className="flex items-center justify-between px-6 py-4">
+                                    <span className="text-sm text-foreground">Hapus semua analisis</span>
+                                    <button
+                                        onClick={() =>
+                                            Swal.fire(
+                                                "Coming Soon",
+                                                "Fitur belum diimplementasikan.",
+                                                "info"
+                                            )
+                                        }
+                                        className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+                                    >
+                                        Hapus
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </section>
 
                     {/* Account Section */}
-                    <section>
-                        <p className="text-sm text-muted mt-3 mb-3">Account</p>
-                        <div className="bg-card rounded-xl shadow-sm border border-border">
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <span className="text-sm text-foreground">Keluar dari akun anda</span>
-                                <button
-                                    onClick={() => handleAction("logout")}
-                                    className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
-                                >
-                                    Keluar
-                                </button>
+                    {isLoggedIn && (
+                        <section>
+                            <p className="text-sm text-muted mt-3 mb-3">Account</p>
+                            <div className="bg-card rounded-xl shadow-sm border border-border">
+                                <div className="flex items-center justify-between px-6 py-4">
+                                    <span className="text-sm text-foreground">Keluar dari akun anda</span>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer"
+                                    >
+                                        Keluar
+                                    </button>
+                                </div>
+                                <div className="flex items-center justify-between px-6 py-4">
+                                    <span className="text-sm text-foreground">Hapus akun Anda</span>
+                                    <button
+                                        onClick={handleDeleteAccount}
+                                        className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer"
+                                    >
+                                        Hapus
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex items-center justify-between px-6 py-4">
-                                <span className="text-sm text-foreground">Hapus akun Anda</span>
-                                <button
-                                    onClick={() => handleAction("delete-account")}
-                                    className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
-                                >
-                                    Hapus
-                                </button>
-                            </div>
-                        </div>
-                    </section>
+                        </section>
+                    )}
                 </div>
             </div>
-
-            {/* Confirm Modal */}
-            {showConfirm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-                    <div className="bg-card rounded-2xl shadow-xl p-6 w-full max-w-sm">
-                        <h2 className="text-lg font-semibold text-foreground mb-2">
-                            {showConfirm === "logout"
-                                ? "Keluar Akun"
-                                : "Konfirmasi"}
-                        </h2>
-                        <p className="text-sm text-muted mb-6">
-                            {showConfirm === "logout"
-                                ? "Anda akan keluar dari akun ini dan kembali ke mode tamu."
-                                : "Apakah Anda yakin ingin melanjutkan tindakan ini? Tindakan ini tidak dapat dibatalkan."}
-                        </p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                onClick={() => setShowConfirm(null)}
-                                className="px-4 py-2 text-sm rounded-lg border border-border text-foreground hover:bg-gray-50 transition-colors"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                onClick={handleConfirm}
-                                className="px-4 py-2 text-sm rounded-lg bg-red-500 text-black font-semibold hover:bg-red-600 transition-colors"
-                            >
-                                {showConfirm === "logout"
-                                    ? "Keluar"
-                                    : "Konfirmasi"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

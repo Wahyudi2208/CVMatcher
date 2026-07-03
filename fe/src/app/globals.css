@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -115,26 +117,48 @@ input[type="password"] {
   color: #fff !important;
   border-radius: 14px !important;
   padding: 12px 20px !important;
+  background: #2967eb !important;
   transition: all 0.15s ease !important;
+}
+
+.custom-swal-confirm-profile:hover {
+  background: #3b82f6 !important;
 }
 
 .custom-swal-confirm-profile:active {
   transform: scale(0.97) !important;
 }
 
-.custom-swal-cancel-profile {
+.custom-swal-confirm-logout {
   cursor: pointer !important;
   color: #fff !important;
   border-radius: 14px !important;
   padding: 12px 30px !important;
-  background: #6b7280 !important;
+  background: #dc2626 !important;
   transition: all 0.15s ease !important;
 }
 
-.custom-swal-cancel-profile:hover {
-  background: #9ca3af !important;
+.custom-swal-confirm-logout:hover {
+  background: #ef4444 !important;
 }
 
-.custom-swal-cancel:active {
+.custom-swal-confirm-logout:active {
+  transform: scale(0.97) !important;
+}
+
+.custom-swal-confirm-delete {
+  cursor: pointer !important;
+  color: #fff !important;
+  border-radius: 14px !important;
+  padding: 12px 20px !important;
+  background: #14b8a6 !important;
+  transition: all 0.15s ease !important;
+}
+
+.custom-swal-confirm-delete:hover {
+  background: #14cbb6 !important;
+}
+
+.custom-swal-confirm-delete:active {
   transform: scale(0.97) !important;
 }

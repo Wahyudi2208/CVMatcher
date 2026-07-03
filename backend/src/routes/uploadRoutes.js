@@ -1,19 +1,23 @@
 import express from 'express'
 import { upload } from '../middlewares/uploadMiddleware.js'
-import { uploadAuth } from '../middlewares/authMiddleware.js'
+import { authenticate, uploadAuth } from '../middlewares/authMiddleware.js'
 import {
     createSession,
     uploadCV,
     uploadJob,
     analyzeSession,
     getResults,
-    getSession
+    getSession,
+    getResultDetail,
+    getHistory,
+    renameHistory,
+    deleteHistory
 } from '../controllers/uploadController.js'
 
 const router = express.Router()
 
 // Create session
-router.post('/session', createSession)
+router.post('/session', uploadAuth, createSession)
 
 // Upload CV (20 untuk login, 10 untuk guest)
 router.post(
@@ -43,10 +47,33 @@ router.get(
     getResults
 )
 
+router.get(
+    '/result/:resultId',
+    getResultDetail
+)
+
 // Ambil session
 router.get(
     '/session/:sessionId',
     getSession
 )
+
+router.get(
+    "/history",
+    authenticate,
+    getHistory
+);
+
+router.patch(
+    "/history/:sessionId",
+    authenticate,
+    renameHistory
+);
+
+router.delete(
+    "/history/:sessionId",
+    authenticate,
+    deleteHistory
+);
 
 export default router

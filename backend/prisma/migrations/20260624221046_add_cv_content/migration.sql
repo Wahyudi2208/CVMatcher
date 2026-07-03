@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `analysis_results` ADD COLUMN `cv_content` LONGTEXT NULL;

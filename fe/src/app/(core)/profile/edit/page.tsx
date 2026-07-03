@@ -222,7 +222,7 @@ export default function EditProfilePage() {
                     popup: "custom-swal-popup",
                     actions: "custom-swal-actions",
                     confirmButton: "custom-swal-confirm-profile",
-                    cancelButton: "custom-swal-cancel-profile",
+                    cancelButton: "custom-swal-cancel",
                 },
             });
 

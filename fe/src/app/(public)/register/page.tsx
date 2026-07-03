@@ -359,7 +359,7 @@ export default function RegisterPage() {
                             disabled={!isFormComplete}
                             className={`w-full py-3 rounded-lg text-white text-sm font-medium transition-colors duration-200
                                 ${isFormComplete
-                                    ? "bg-[#1a6bcc] hover:opacity-90"
+                                    ? "bg-[#1a6bcc] hover:opacity-90 cursor-pointer"
                                     : "bg-gray-400 cursor-not-allowed"
                                 }`}
                         >

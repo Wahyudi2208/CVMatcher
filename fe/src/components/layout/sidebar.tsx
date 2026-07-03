@@ -7,6 +7,12 @@ import { Menu, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 
+interface HistoryItem {
+    id: number;
+    title: string;
+    createdAt: string;
+}
+
 interface SidebarProps {
     desktopSidebarOpen: boolean;
     setDesktopSidebarOpen: React.Dispatch<
@@ -15,6 +21,7 @@ interface SidebarProps {
 
     isLoggedIn: boolean;
     userName: string;
+    history: HistoryItem[];
 }
 
 export default function Sidebar({
@@ -22,6 +29,7 @@ export default function Sidebar({
     setDesktopSidebarOpen,
     isLoggedIn,
     userName,
+    history,
 }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
@@ -72,7 +80,7 @@ export default function Sidebar({
         };
 
         checkSession();
-    }, []);
+    }, [pathname]);
 
     useEffect(() => {
         const sessionId =
@@ -81,7 +89,7 @@ export default function Sidebar({
             );
 
         setCurrentSessionId(sessionId);
-    }, []);
+    }, [pathname]);
 
     const isActive = (path: string) => {
 
@@ -146,7 +154,6 @@ export default function Sidebar({
             );
 
             setCurrentSessionId(null);
-
             setShowAnalysisMenu(false);
 
             router.replace("/upload_page");
@@ -271,7 +278,7 @@ export default function Sidebar({
                             ${isActive("/upload_page")
                                 ? "bg-teal-600 text-white"
                                 : "text-sidebar-foreground hover:bg-sidebar-hover"}
-            `}
+                        `}
                     >
                         <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -281,52 +288,85 @@ export default function Sidebar({
                     </Link>
 
                     {(isLoggedIn || showAnalysisMenu) && (
-                        <Link
-                            href={
-                                currentSessionId
-                                    ? `/analysis_result/${currentSessionId}`
-                                    : "#"
-                            }
-                            className={`
-                            flex items-center rounded-lg text-sm font-medium transition-all
-                            ${itemClass
-                                    ? "gap-3 px-3 py-2.5"
-                                    : "justify-center py-3"}
-                            ${isActive("/analysis_result")
-                                    ? "bg-teal-600 text-white"
-                                    : "text-sidebar-foreground hover:bg-sidebar-hover"}
-                        `}
-                        >
-                            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 ２h-２a２ ２ ０ ０１-２ -２z" />
-                            </svg>
+                        <div>
+                            {/* Parent Menu */}
+                            <Link
+                                href={
+                                    history.length > 0
+                                        ? `/analysis_result/${history[0].id}`
+                                        : currentSessionId
+                                            ? `/analysis_result/${currentSessionId}`
+                                            : "#"
+                                }
+                                className={`
+                                    flex items-center rounded-lg text-sm font-medium transition-all
+                                    ${itemClass
+                                        ? "gap-3 px-3 py-2.5"
+                                        : "justify-center py-3"}
+                                    ${isActive("/analysis_result")
+                                        ? "bg-teal-600 text-white"
+                                        : "text-sidebar-foreground hover:bg-sidebar-hover"}
+                                `}
+                            >
+                                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 ２h-２a２ ２ ０ ０１-２ -２z" />
+                                </svg>
 
-                            {showLabel && "Hasil Analisis"}
-                        </Link>
+                                {showLabel && "Hasil Analisis"}
+                            </Link>
+
+                            {/* History */}
+                            {showLabel && history.length > 0 && (
+                                <div className="ml-6 mt-1 space-y-1 border-l border-border pr-1 pl-3 max-h-72 overflow-y-auto">
+                                    {history.map((item) => {
+                                        const active =
+                                            pathname === `/analysis_result/${item.id}`;
+
+                                        return (
+                                            <Link
+                                                key={item.id}
+                                                href={`/analysis_result/${item.id}`}
+                                                className={`
+                                                    block rounded-md px-3 py-2 text-sm truncate transition-all
+                                                    ${active
+                                                        ? "bg-teal-600 text-white font-medium"
+                                                        : "text-sidebar-foreground hover:bg-sidebar-hover"
+                                                    }
+                                                `}
+                                            >
+                                                {item.title}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
                     )}
                 </nav>
 
                 {/* Bottom Nav */}
                 <div className="mt-auto space-y-1 px-3">
 
-                    <Link
-                        href="/profile"
-                        className={`
+                    {isLoggedIn && (
+                        <Link
+                            href="/profile"
+                            className={`
                             flex items-center rounded-lg text-sm font-medium transition-all
                             ${itemClass
-                                ? "gap-3 px-3 py-2.5"
-                                : "justify-center py-3"}
+                                    ? "gap-3 px-3 py-2.5"
+                                    : "justify-center py-3"}
                             ${isActive("/profile")
-                                ? "bg-teal-600 text-white"
-                                : "text-sidebar-foreground hover:bg-sidebar-hover"}
+                                    ? "bg-teal-600 text-white"
+                                    : "text-sidebar-foreground hover:bg-sidebar-hover"}
                         `}
-                    >
-                        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
+                        >
+                            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
 
-                        {showLabel && "Profil"}
-                    </Link>
+                            {showLabel && "Profil"}
+                        </Link>
+                    )}
 
                     <Link
                         href="/setting"

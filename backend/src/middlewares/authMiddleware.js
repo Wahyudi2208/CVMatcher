@@ -11,7 +11,6 @@ export const authenticate = (req, res, next) => {
         }
 
         const token = authHeader.split(' ')[1]
-
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
         req.user = decoded
@@ -30,6 +29,7 @@ export const authenticate = (req, res, next) => {
 }
 
 export const uploadAuth = (req, res, next) => {
+    req.user = null
     try {
         const authHeader = req.headers.authorization
 
