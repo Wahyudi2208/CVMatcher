@@ -131,7 +131,7 @@ async def analyze_batch_endpoint(
     cvs:      List[UploadFile] = File(...),
     jd_text:  str              = Form(...),
     jd_title: str              = Form(default="Posisi yang Dilamar"),
-    top_n:    int              = Form(default=10),
+    top_n:    Optional[int]    = Form(default=None),
 ):
     """
     Ranking BANYAK CV terhadap satu JD — untuk fitur HRD.

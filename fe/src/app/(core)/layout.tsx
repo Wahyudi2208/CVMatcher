@@ -96,11 +96,22 @@ export default function CoreLayout({
                     }
                 );
 
-                if (!res.ok) return;
+                if (!res.ok) {
+                    setHistory([]);
+                    localStorage.removeItem(
+                        "currentSessionId"
+                    );
+                    return;
+                }
 
                 const data =
                     await res.json();
                 setHistory(data);
+                if (data.length === 0) {
+                    localStorage.removeItem(
+                        "currentSessionId"
+                    );
+                }
             } catch (error) {
                 console.error(error);
             }
@@ -124,6 +135,7 @@ export default function CoreLayout({
                 isLoggedIn={isLoggedIn}
                 userName={userName}
                 history={history}
+                setHistory={setHistory}
             />
 
             <main

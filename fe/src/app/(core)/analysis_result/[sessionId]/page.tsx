@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { ChevronDown, Lock, ExternalLink, Info, FileText, SlidersHorizontal, ArrowUpDown, } from "lucide-react";
 import Link from "next/link";
+import { getTier } from "@/lib/score";
 
 type Candidate = {
     id: number;
@@ -18,61 +19,6 @@ type Candidate = {
     labelColor: string;
     ringColor: string;
 };
-
-function getTier(score: number) {
-
-    if (score >= 85) {
-        return {
-            label: "Sangat Sesuai",
-            labelColor: "text-green-600",
-            ringColor: "#16a34a",
-        };
-    }
-
-    if (score >= 70) {
-        return {
-            label: "Cukup Sesuai",
-            labelColor: "text-yellow-500",
-            ringColor: "#eab308",
-        };
-    }
-
-    if (score >= 55) {
-        return {
-            label: "Kurang Sesuai",
-            labelColor: "text-orange-500",
-            ringColor: "#f97316",
-        };
-    }
-
-    return {
-        label: "Tidak Sesuai",
-        labelColor: "text-red-600",
-        ringColor: "#dc2626",
-    };
-}
-
-// function getAILabelStyle(label: string) {
-
-//     if (label === "Strong Match") {
-//         return {
-//             labelColor: "text-green-600",
-//             ringColor: "#16a34a",
-//         };
-//     }
-
-//     if (label === "Potential Match") {
-//         return {
-//             labelColor: "text-yellow-500",
-//             ringColor: "#eab308",
-//         };
-//     }
-
-//     return {
-//         labelColor: "text-red-600",
-//         ringColor: "#dc2626",
-//     };
-// }
 
 function CircleScore({ score, color }: { score: number; color: string }) {
     const radius = 28;
@@ -94,7 +40,7 @@ function CircleScore({ score, color }: { score: number; color: string }) {
     );
 }
 
-function CandidateCard({ candidate }: { candidate: Candidate }) {
+function CandidateCard({ candidate, sessionId }: { candidate: Candidate; sessionId: string }) {
     return (
         <div className="bg-card border border-border rounded-xl p-4 sm:p-5 flex justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -140,7 +86,7 @@ function CandidateCard({ candidate }: { candidate: Candidate }) {
             <div className="flex flex-col items-end justify-between min-w-[90px]">
                 <CircleScore score={candidate.score} color={candidate.ringColor} />
                 <span className={`text-xs font-semibold text-right ${candidate.labelColor}`}>{candidate.label}</span>
-                <Link href={`/detail/${candidate.id}`} className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors mt-12">
+                <Link href={`/analysis_result/${sessionId}/detail/${candidate.id}`} className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors mt-12">
                     Lihat Rincian
                     <ExternalLink className="w-3 h-3" />
                 </Link>
@@ -150,6 +96,7 @@ function CandidateCard({ candidate }: { candidate: Candidate }) {
 }
 
 export default function HasilAnalisisPage() {
+    const router = useRouter();
     const [descExpanded, setDescExpanded] = useState(false);
     const [showBanner, setShowBanner] = useState(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -160,8 +107,7 @@ export default function HasilAnalisisPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const candidatesPerPage = 6;
     const params = useParams();
-    const sessionId =
-        params.sessionId as string;
+    const sessionId = params.sessionId as string;
     const [candidates, setCandidates] = useState<Candidate[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -171,6 +117,7 @@ export default function HasilAnalisisPage() {
     const [filterType, setFilterType] = useState("mostSkills");
     const [sortOrder, setSortOrder] = useState("asc");
     const [sessionTitle, setSessionTitle] = useState("");
+    const pathname = usePathname();
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -216,7 +163,6 @@ export default function HasilAnalisisPage() {
                 }
             } catch (error) {
                 console.error("Auth check failed");
-
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
 
@@ -236,17 +182,49 @@ export default function HasilAnalisisPage() {
             setError("");
             try {
                 const sessionId = params?.sessionId;
-                setLoading(false);
                 if (!sessionId) {
                     setError("Session ID tidak ditemukan");
                     return;
                 }
-
-                const res = await fetch(
-                    `http://localhost:5000/api/upload/results/${sessionId}`
-                );
+                const token = localStorage.getItem("token");
+                const guestId = localStorage.getItem("guestId");
+                const res =
+                    await fetch(
+                        `http://localhost:5000/api/upload/results/${sessionId}`,
+                        {
+                            headers: {
+                                ...(token
+                                    ? {
+                                        Authorization:
+                                            `Bearer ${token}`
+                                    }
+                                    : {}),
+                                ...(guestId
+                                    ? {
+                                        "x-guest-id":
+                                            guestId
+                                    }
+                                    : {})
+                            }
+                        }
+                    );
 
                 const data = await res.json();
+
+                if (res.status === 401 || res.status === 403) {
+                    if (localStorage.getItem("token")) {
+                        setCandidates([]);
+                        setSessionTitle("");
+                        setJobDescriptionText("");
+                        setJobDescriptionPdf("");
+                        setLoading(false);
+
+                        return;
+                    }
+
+                    router.replace("/upload_page");
+                    return;
+                }
 
                 if (!res.ok) {
                     throw new Error(
@@ -255,7 +233,6 @@ export default function HasilAnalisisPage() {
                 }
 
                 if (data.jobDescription) {
-
                     // Manual Text
                     if (data.jobDescription.content) {
 
@@ -263,20 +240,16 @@ export default function HasilAnalisisPage() {
                             data.jobDescription.content
                         )
                     }
-
                     // PDF / DOC / DOCX
                     else if (data.jobDescription.filePath) {
-
                         const fileName =
                             data.jobDescription.filePath
                                 .split(/[\\/]/)
                                 .pop()
-
                         const fileUrl =
                             `http://localhost:5000/uploads/${fileName}`
 
                         setJobDescriptionPdf(fileUrl)
-
                         setJobDescriptionFileName(
                             data.jobDescription.fileName || "Job Description"
                         )
@@ -334,7 +307,7 @@ export default function HasilAnalisisPage() {
 
         if (!sessionId) return;
         fetchResults();
-    }, [sessionId]);
+    }, [pathname]);
 
     useEffect(() => {
         const checkOverflow = () => {
@@ -383,11 +356,8 @@ export default function HasilAnalisisPage() {
     }
 
     const processedCandidates = [...candidates].sort((a, b) => {
-
         let comparison = 0;
-
         switch (filterType) {
-
             case "mostSkills":
                 comparison =
                     b.matchedSkills.length -
@@ -722,7 +692,7 @@ export default function HasilAnalisisPage() {
                     {/* Candidate Cards */}
                     <div className="flex flex-col gap-4">
                         {currentCandidates.map((c) => (
-                            <CandidateCard key={c.id} candidate={c} />
+                            <CandidateCard key={c.id} candidate={c} sessionId={sessionId} />
                         ))}
                     </div>
 

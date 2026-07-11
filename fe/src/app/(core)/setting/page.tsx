@@ -32,7 +32,6 @@ export default function SettingsPage() {
     }, []);
 
     const handleLogout = async () => {
-
         const result = await Swal.fire({
             icon: "warning",
             title: "Keluar Akun?",
@@ -56,16 +55,20 @@ export default function SettingsPage() {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         localStorage.removeItem("currentSessionId");
+        localStorage.setItem(
+            "logout-event",
+            Date.now().toString()
+        );
+        sessionStorage.clear();
 
-        router.replace("/landing_page");
+        window.location.replace("/landing_page");
     };
 
     const handleDeleteAccount = async () => {
-
         const result = await Swal.fire({
             icon: "warning",
             title: "Hapus Akun?",
-            text: "Akun dan seluruh riwayat analisis Anda akan dihapus permanen.",
+            text: "Akun dan seluruh riwayat analisis Anda akan dihapus permanen !",
             showCancelButton: true,
             reverseButtons: true,
             confirmButtonText: "Hapus Akun",
@@ -125,9 +128,7 @@ export default function SettingsPage() {
             router.replace("/landing_page");
 
         } catch (error) {
-
             console.error(error);
-
             Swal.fire({
                 icon: "error",
                 title: "Gagal",

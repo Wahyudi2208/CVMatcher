@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X } from "lucide-react";
+import { Menu, X, MoreHorizontal } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import toast from "react-hot-toast";
 
 interface HistoryItem {
     id: number;
@@ -22,6 +23,9 @@ interface SidebarProps {
     isLoggedIn: boolean;
     userName: string;
     history: HistoryItem[];
+    setHistory: React.Dispatch<
+        React.SetStateAction<HistoryItem[]>
+    >;
 }
 
 export default function Sidebar({
@@ -30,12 +34,26 @@ export default function Sidebar({
     isLoggedIn,
     userName,
     history,
+    setHistory,
 }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [showAnalysisMenu, setShowAnalysisMenu] = useState(false);
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+    const [hoveredHistoryId, setHoveredHistoryId] = useState<number | null>(null);
+    const [openedMenuId, setOpenedMenuId] = useState<number | null>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const [menuPosition, setMenuPosition] =
+        useState({
+            x: 0,
+            y: 0,
+        });
+    const [editingId, setEditingId] =
+        useState<number | null>(null);
+
+    const [editingTitle, setEditingTitle] =
+        useState("");
 
     useEffect(() => {
         localStorage.setItem(
@@ -90,6 +108,51 @@ export default function Sidebar({
 
         setCurrentSessionId(sessionId);
     }, [pathname]);
+
+    useEffect(() => {
+        const handleClickOutside = (
+            event: MouseEvent
+        ) => {
+            if (
+                menuRef.current &&
+                !menuRef.current.contains(
+                    event.target as Node
+                )
+            ) {
+                setOpenedMenuId(null);
+            }
+        };
+
+        const handleEscape = (
+            event: KeyboardEvent
+        ) => {
+            if (
+                event.key === "Escape"
+            ) {
+                setOpenedMenuId(null);
+            }
+        };
+
+        document.addEventListener(
+            "mousedown",
+            handleClickOutside
+        );
+        document.addEventListener(
+            "keydown",
+            handleEscape
+        );
+
+        return () => {
+            document.removeEventListener(
+                "mousedown",
+                handleClickOutside
+            );
+            document.removeEventListener(
+                "keydown",
+                handleEscape
+            );
+        };
+    }, []);
 
     const isActive = (path: string) => {
 
@@ -148,15 +211,41 @@ export default function Sidebar({
         });
 
         if (result.isConfirmed) {
+            try {
+                const guestId = localStorage.getItem("guestId");
+                if (guestId) {
+                    await fetch(
+                        "http://localhost:5000/api/upload/guest-session",
+                        {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+                            body: JSON.stringify({
+                                guestId
+                            })
+                        }
+                    );
+                }
 
-            localStorage.removeItem(
-                "currentSessionId"
-            );
+                localStorage.removeItem(
+                    "currentSessionId"
+                );
 
-            setCurrentSessionId(null);
-            setShowAnalysisMenu(false);
+                setCurrentSessionId(null);
+                setShowAnalysisMenu(false);
 
-            router.replace("/upload_page");
+                router.replace("/upload_page");
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire(
+                    "Gagal",
+                    "Gagal menghapus analisis sebelumnya.",
+                    "error"
+                );
+            }
         }
     };
 
@@ -294,9 +383,7 @@ export default function Sidebar({
                                 href={
                                     history.length > 0
                                         ? `/analysis_result/${history[0].id}`
-                                        : currentSessionId
-                                            ? `/analysis_result/${currentSessionId}`
-                                            : "#"
+                                        : "/analysis_result"
                                 }
                                 className={`
                                     flex items-center rounded-lg text-sm font-medium transition-all
@@ -317,25 +404,126 @@ export default function Sidebar({
 
                             {/* History */}
                             {showLabel && history.length > 0 && (
-                                <div className="ml-6 mt-1 space-y-1 border-l border-border pr-1 pl-3 max-h-72 overflow-y-auto">
+                                <div className="ml-6 mt-1 space-y-1 border-l border-border pr-1 pl-3 max-h-72 overflow-y-auto overflow-x-visible">
                                     {history.map((item) => {
                                         const active =
                                             pathname === `/analysis_result/${item.id}`;
 
                                         return (
-                                            <Link
+                                            <div
                                                 key={item.id}
-                                                href={`/analysis_result/${item.id}`}
-                                                className={`
-                                                    block rounded-md px-3 py-2 text-sm truncate transition-all
-                                                    ${active
-                                                        ? "bg-teal-600 text-white font-medium"
-                                                        : "text-sidebar-foreground hover:bg-sidebar-hover"
-                                                    }
-                                                `}
+                                                className="relative"
+                                                onMouseEnter={() => setHoveredHistoryId(item.id)}
+                                                onMouseLeave={() => setHoveredHistoryId(null)}
                                             >
-                                                {item.title}
-                                            </Link>
+                                                <Link
+                                                    href={`/analysis_result/${item.id}`}
+                                                    className={`
+                                                        flex items-center rounded-md px-3 py-2 text-sm transition-all
+                                                        ${active
+                                                            ? "bg-teal-600 text-white font-medium"
+                                                            : "text-sidebar-foreground hover:bg-sidebar-hover"
+                                                        }
+                                                    `}
+                                                >
+                                                    {editingId === item.id ? (
+                                                        <input
+                                                            autoFocus
+                                                            value={editingTitle}
+                                                            onChange={(e) =>
+                                                                setEditingTitle(
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                            onKeyDown={async (e) => {
+                                                                if (
+                                                                    e.key === "Escape"
+                                                                ) {
+                                                                    setEditingId(null);
+                                                                    return;
+                                                                }
+
+                                                                if (
+                                                                    e.key !== "Enter"
+                                                                )
+                                                                    return;
+
+                                                                const token =
+                                                                    localStorage.getItem(
+                                                                        "token"
+                                                                    );
+
+                                                                const res =
+                                                                    await fetch(
+                                                                        `http://localhost:5000/api/upload/history/${item.id}`,
+                                                                        {
+                                                                            method: "PATCH",
+                                                                            headers: {
+                                                                                "Content-Type":
+                                                                                    "application/json",
+                                                                                Authorization:
+                                                                                    `Bearer ${token}`,
+                                                                            },
+                                                                            body:
+                                                                                JSON.stringify({
+                                                                                    title:
+                                                                                        editingTitle,
+                                                                                }),
+                                                                        }
+                                                                    );
+                                                                if (
+                                                                    res.ok
+                                                                ) {
+                                                                    setHistory((prev) =>
+                                                                        prev.map((h) => h.id === item.id
+                                                                            ? {
+                                                                                ...h,
+                                                                                title: editingTitle,
+                                                                            }
+                                                                            : h
+                                                                        )
+                                                                    );
+                                                                }
+                                                                setEditingId(null);
+                                                            }}
+                                                            className="w-full rounded bg-transparent outline-none" />
+                                                    ) : (
+                                                        <span
+                                                            className={`
+                                                                min-w-0 flex-1 truncate
+                                                                ${hoveredHistoryId === item.id || openedMenuId === item.id
+                                                                    ? "pr-8"
+                                                                    : ""}
+                                                            `}
+                                                        >
+                                                            {item.title}
+                                                        </span>
+                                                    )}
+                                                </Link>
+
+                                                {(hoveredHistoryId === item.id ||
+                                                    openedMenuId === item.id) && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                const rect =
+                                                                    e.currentTarget.getBoundingClientRect();
+                                                                setMenuPosition({
+                                                                    x: rect.right + 8,
+                                                                    y: rect.top,
+                                                                });
+
+                                                                setOpenedMenuId(
+                                                                    openedMenuId === item.id
+                                                                        ? null
+                                                                        : item.id
+                                                                );
+                                                            }}
+                                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-sidebar-hover cursor-pointer">
+                                                            <MoreHorizontal className="w-4 h-4" />
+                                                        </button>)}
+                                            </div>
                                         );
                                     })}
                                 </div>
@@ -346,7 +534,6 @@ export default function Sidebar({
 
                 {/* Bottom Nav */}
                 <div className="mt-auto space-y-1 px-3">
-
                     {isLoggedIn && (
                         <Link
                             href="/profile"
@@ -410,6 +597,121 @@ export default function Sidebar({
                     </div>
                 </div>
             </aside>
+
+            {openedMenuId && (
+                <div
+                    ref={menuRef}
+                    style={{
+                        position: "fixed",
+                        left: menuPosition.x,
+                        top: menuPosition.y,
+                    }}
+                    className="z-[9999] w-40 overflow-hidden rounded-xl border border-border bg-card shadow-xl">
+                    <button
+                        onClick={() => {
+                            const historyItem =
+                                history.find(
+                                    h =>
+                                        h.id === openedMenuId
+                                );
+
+                            if (!historyItem)
+                                return;
+
+                            setEditingId(
+                                historyItem.id
+                            );
+
+                            setEditingTitle(
+                                historyItem.title
+                            );
+                            setOpenedMenuId(null);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-sidebar-hover cursor-pointer">
+                        Rename
+                    </button>
+                    <div className="border-t border-border" />
+                    <button
+                        onClick={async () => {
+                            setOpenedMenuId(null);
+                            const result =
+                                await Swal.fire({
+                                    icon: "warning",
+                                    title: "Hapus Riwayat?",
+                                    text: "Riwayat analisis akan dihapus permanen !",
+                                    showCancelButton: true,
+                                    reverseButtons: true,
+                                    confirmButtonText: "Hapus",
+                                    cancelButtonText: "Batal",
+                                    customClass: {
+                                        popup: "custom-swal-popup",
+                                        actions: "custom-swal-actions",
+                                        confirmButton: "custom-swal-confirm",
+                                        cancelButton: "custom-swal-cancel",
+                                    },
+                                });
+
+                            if (!result.isConfirmed)
+                                return;
+
+                            const token =
+                                localStorage.getItem("token");
+
+                            const res =
+                                await fetch(
+                                    `http://localhost:5000/api/upload/history/${openedMenuId}`,
+                                    {
+                                        method: "DELETE",
+                                        headers: {
+                                            Authorization:
+                                                `Bearer ${token}`,
+                                        },
+                                    }
+                                );
+
+                            if (!res.ok) {
+                                toast.error(
+                                    "Riwayat gagal dihapus."
+                                );
+                                return;
+                            }
+
+                            setHistory((prev) =>
+                                prev.filter(h => h.id !== openedMenuId)
+                            );
+
+                            if (
+                                pathname ===
+                                `/analysis_result/${openedMenuId}`
+                            ) {
+                                if (history.length > 1) {
+                                    const newest =
+                                        history.find(
+                                            h =>
+                                                h.id !==
+                                                openedMenuId
+                                        );
+                                    if (newest) {
+                                        router.replace(
+                                            `/analysis_result/${newest.id}`
+                                        );
+                                    }
+                                } else {
+                                    router.replace(
+                                        "/upload_page"
+                                    );
+                                }
+                            }
+
+                            toast.success(
+                                "Riwayat berhasil dihapus."
+                            );
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-500/10 cursor-pointer">
+                        Delete
+                    </button>
+                </div>
+            )}
 
             {/* Overlay */}
             {mobileSidebarOpen && (

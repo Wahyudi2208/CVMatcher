@@ -11,7 +11,8 @@ import {
     getResultDetail,
     getHistory,
     renameHistory,
-    deleteHistory
+    deleteHistory,
+    deleteGuestSession
 } from '../controllers/uploadController.js'
 
 const router = express.Router()
@@ -44,11 +45,13 @@ router.post(
 // Ambil hasil analisis
 router.get(
     '/results/:sessionId',
+    uploadAuth,
     getResults
 )
 
 router.get(
     '/result/:resultId',
+    uploadAuth,
     getResultDetail
 )
 
@@ -57,6 +60,11 @@ router.get(
     '/session/:sessionId',
     getSession
 )
+
+router.delete(
+    "/guest-session",
+    deleteGuestSession
+);
 
 router.get(
     "/history",

@@ -842,6 +842,7 @@ def match_skills(cv_text: str, jd_text: str, threshold: float = 0.72) -> Dict[st
         'matched_skills':    matched,
         'unmatched_skills':  unmatched,
         'jd_skills':         all_jd,
+        # 'cv_skills':         all_cv,
         'similarity_scores': scores,
     }
 
@@ -1037,7 +1038,7 @@ def analyze_single(cv_input: str, jd_text: str, jd_title: str = "Posisi") -> Dic
         'matched_skills':         skill_match['matched_skills'],
         'unmatched_skills':       skill_match['unmatched_skills'],
         'job_skills':             skill_match['jd_skills'],
-        'cv_skills':              skill_match['cv_skills'],
+        # 'cv_skills':              skill_match['cv_skills'],
         'cv_text':                cv_text,
         'summary_recommendation': summary_rec,
         'report':                 report,
@@ -1068,7 +1069,7 @@ def analyze_batch(
         r['matched_skills']         = sm['matched_skills']
         r['unmatched_skills']       = sm['unmatched_skills']
         r['job_skills']             = sm['jd_skills']
-        r['cv_skills']              = sm['cv_skills']
+        # r['cv_skills']              = sm['cv_skills']
         r['cv_text']                = cv_text
         r['summary_recommendation'] = generate_summary_recommendation(
             r, sm, name, jd_title
@@ -1101,63 +1102,63 @@ print("   analyze_batch()  ← HRD (multiple CV)")
 # SMOKE TEST
 # ============================================================
 
-print("\n" + "=" * 68)
-print("SMOKE TEST v2")
-print("=" * 68)
+# print("\n" + "=" * 68)
+# print("SMOKE TEST v2")
+# print("=" * 68)
 
-_jd = """
-We are looking for a Senior Frontend Developer.
-Requirements:
-- Minimum 3 years experience in frontend development
-- Proficiency in React.js, Vue.js, JavaScript, TypeScript
-- Experience with REST API integration
-- Knowledge of MySQL or PostgreSQL
-- Familiarity with Git and CI/CD
-- Bachelor degree in Computer Science
-"""
+# _jd = """
+# We are looking for a Senior Frontend Developer.
+# Requirements:
+# - Minimum 3 years experience in frontend development
+# - Proficiency in React.js, Vue.js, JavaScript, TypeScript
+# - Experience with REST API integration
+# - Knowledge of MySQL or PostgreSQL
+# - Familiarity with Git and CI/CD
+# - Bachelor degree in Computer Science
+# """
 
-_cv = """
-SARI DEWI KUSUMA
-sari.dewi@email.com | 081234567890
+# _cv = """
+# SARI DEWI KUSUMA
+# sari.dewi@email.com | 081234567890
 
-Summary
-Frontend Developer dengan 4 tahun pengalaman di pengembangan web.
-Mahir dalam Vue.js, JavaScript, dan REST API.
+# Summary
+# Frontend Developer dengan 4 tahun pengalaman di pengembangan web.
+# Mahir dalam Vue.js, JavaScript, dan REST API.
 
-Work Experience
-Frontend Developer | PT Teknologi Maju | 2021 - Present
-- Mengembangkan aplikasi web menggunakan Vue.js dan JavaScript
-- Integrasi REST API dengan backend Express.js
-- Penggunaan MySQL untuk manajemen data
+# Work Experience
+# Frontend Developer | PT Teknologi Maju | 2021 - Present
+# - Mengembangkan aplikasi web menggunakan Vue.js dan JavaScript
+# - Integrasi REST API dengan backend Express.js
+# - Penggunaan MySQL untuk manajemen data
 
-Skills
-Vue.js, JavaScript, REST API, MySQL, Git, HTML, CSS
+# Skills
+# Vue.js, JavaScript, REST API, MySQL, Git, HTML, CSS
 
-Education
-S1 Teknik Informatika | Universitas Indonesia | 2021
-"""
+# Education
+# S1 Teknik Informatika | Universitas Indonesia | 2021
+# """
 
-result = analyze_single(_cv, _jd, "Senior Frontend Developer")
-label, emoji = result['label']
-print(f"\n  Nama kandidat : {result['candidate_name']}")
-print(f"  Score         : {emoji} {label} ({result['score_result']['final_score']:.1f}%)")
-print(f"  Skill sesuai  : {result['matched_skills']}")
-print(f"  Skill gap     : {result['unmatched_skills']}")
-print(f"  Summary       : {result['summary_recommendation'][:150]}...")
+# result = analyze_single(_cv, _jd, "Senior Frontend Developer")
+# label, emoji = result['label']
+# print(f"\n  Nama kandidat : {result['candidate_name']}")
+# print(f"  Score         : {emoji} {label} ({result['score_result']['final_score']:.1f}%)")
+# print(f"  Skill sesuai  : {result['matched_skills']}")
+# print(f"  Skill gap     : {result['unmatched_skills']}")
+# print(f"  Summary       : {result['summary_recommendation'][:150]}...")
 
-print("\n✅ Smoke test passed!")
-print("=" * 68)
-print("""
-OUTPUT JSON UNTUK BACKEND:
-  candidate_name         → nama kandidat dari CV
-  score_result           → detail scoring SBERT per section
-  label                  → ["Strong Match", "🟢"]
-  reasoning              → analisis singkat 1-2 kalimat
-  matched_skills         → list skill yang sesuai dengan JD
-  unmatched_skills       → list skill yang kurang/tidak ada di CV
-  jd_skills              → list seluruh skill requirement yang berhasil diekstrak dari Job Description
-  cv_skills              → list seluruh skill yang berhasil diekstrak dari CV kandidat
-  cv_text                → isi teks CV (untuk ditampilkan di detail)
-  summary_recommendation → rekomendasi lengkap 3-4 kalimat
-  report                 → laporan teks lengkap (untuk export)
-""")
+# print("\n✅ Smoke test passed!")
+# print("=" * 68)
+# print("""
+# OUTPUT JSON UNTUK BACKEND:
+#   candidate_name         → nama kandidat dari CV
+#   score_result           → detail scoring SBERT per section
+#   label                  → ["Strong Match", "🟢"]
+#   reasoning              → analisis singkat 1-2 kalimat
+#   matched_skills         → list skill yang sesuai dengan JD
+#   unmatched_skills       → list skill yang kurang/tidak ada di CV
+#   jd_skills              → list seluruh skill requirement yang berhasil diekstrak dari Job Description
+#   cv_skills              → list seluruh skill yang berhasil diekstrak dari CV kandidat
+#   cv_text                → isi teks CV (untuk ditampilkan di detail)
+#   summary_recommendation → rekomendasi lengkap 3-4 kalimat
+#   report                 → laporan teks lengkap (untuk export)
+# """)

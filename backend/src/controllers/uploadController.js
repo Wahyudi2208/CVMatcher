@@ -6,23 +6,92 @@ import { analyzeBatchCV } from '../services/aiService.js'
 
 export const createSession = async (req, res) => {
     try {
-        const userId = req.user?.id || null // dari JWT kalau login
+        const userId = req.user?.id || null;
+        const guestId =
+            userId
+                ? null
+                : req.body?.guestId;
 
-        const session = await prisma.uploadSession.create({
-            data: {
-                userId,
-                token: uuidv4()
+        if (!userId && guestId) {
+            const expiredDate = new Date(
+                Date.now() - 24 * 60 * 60 * 1000
+            );
+
+            const expiredSessions =
+                await prisma.uploadSession.findMany({
+                    where: {
+                        guestId,
+                        createdAt: {
+                            lt: expiredDate
+                        }
+                    },
+                    select: {
+                        id: true
+                    }
+                });
+
+            if (expiredSessions.length > 0) {
+                const sessionIds =
+                    expiredSessions.map(
+                        s => s.id
+                    );
+
+                await prisma.$transaction([
+                    prisma.analysisResult.deleteMany({
+                        where: {
+                            sessionId: {
+                                in: sessionIds
+                            }
+                        }
+                    }),
+
+                    prisma.cVFile.deleteMany({
+                        where: {
+                            sessionId: {
+                                in: sessionIds
+                            }
+                        }
+                    }),
+
+                    prisma.jobDescriptionFile.deleteMany({
+                        where: {
+                            sessionId: {
+                                in: sessionIds
+                            }
+                        }
+                    }),
+
+                    prisma.uploadSession.deleteMany({
+                        where: {
+                            id: {
+                                in: sessionIds
+                            }
+                        }
+                    })
+                ]);
             }
-        })
+        }
+        const session =
+            await prisma.uploadSession.create({
+                data: {
+                    userId,
+                    guestId,
+                    token: uuidv4()
+                }
+            });
 
         res.json({
-            message: 'Session created',
+            message: "Session created",
             session
-        })
+        });
+
     } catch (error) {
-        res.status(500).json({ error: error.message })
+        res.status(500).json({
+            error: error.message
+        });
+
     }
-}
+};
 
 export const uploadCV = async (req, res) => {
     try {
@@ -288,7 +357,6 @@ export const analyzeSession = async (req, res) => {
 
     } catch (error) {
         console.error(error)
-
         res.status(500).json({
             error: error.message
         })
@@ -318,6 +386,37 @@ export const getResults = async (req, res) => {
             return res.status(404).json({
                 error: 'Session not found'
             })
+        }
+
+        // Registered Session
+        if (session.userId !== null) {
+            if (!req.user) {
+                return res.status(401).json({
+                    error: "Unauthorized"
+                });
+            }
+
+            if (Number(req.user.id) !== Number(session.userId)) {
+                return res.status(403).json({
+                    error: "Forbidden"
+                });
+            }
+        }
+
+        // Guest Session
+        else {
+            const guestId = req.headers["x-guest-id"];
+            if (!guestId) {
+                return res.status(401).json({
+                    error: "Unauthorized"
+                });
+            }
+
+            if (guestId !== session.guestId) {
+                return res.status(403).json({
+                    error: "Forbidden"
+                });
+            }
         }
 
         const results = await prisma.analysisResult.findMany({
@@ -392,7 +491,8 @@ export const getResultDetail = async (req, res) => {
                     id: Number(resultId)
                 },
                 include: {
-                    cvFile: true
+                    cvFile: true,
+                    session: true
                 }
             })
 
@@ -402,6 +502,41 @@ export const getResultDetail = async (req, res) => {
             })
         }
 
+        // Registered
+        if (result.session.userId !== null) {
+            if (!req.user) {
+                return res.status(401).json({
+                    error: "Unauthorized"
+                });
+            }
+
+            if (
+                Number(req.user.id) !==
+                Number(result.session.userId)
+            ) {
+                return res.status(403).json({
+                    error: "Forbidden"
+                });
+            }
+        }
+        // Guest
+        else {
+            const guestId = req.headers["x-guest-id"];
+            if (!guestId) {
+                return res.status(401).json({
+                    error: "Unauthorized"
+                });
+            }
+
+            if (guestId !== result.session.guestId) {
+                return res.status(403).json({
+                    error: "Forbidden"
+                });
+            }
+
+        }
+
+        delete result.session;
         res.json(result)
 
     } catch (error) {
@@ -427,7 +562,6 @@ export const getHistory = async (req, res) => {
                 orderBy: {
                     createdAt: "desc"
                 }
-
             });
 
         res.json(histories);
@@ -443,6 +577,25 @@ export const renameHistory = async (req, res) => {
     try {
         const { sessionId } = req.params;
         const { title } = req.body;
+        const session =
+            await prisma.uploadSession.findUnique({
+                where: {
+                    id: Number(sessionId)
+                }
+            });
+
+        if (!session) {
+            return res.status(404).json({
+                error: "History not found"
+            });
+        }
+
+        if (session.userId !== req.user.id) {
+            return res.status(403).json({
+                error: "Forbidden"
+            });
+        }
+
         await prisma.uploadSession.update({
             where: {
                 id: Number(sessionId)
@@ -466,11 +619,51 @@ export const renameHistory = async (req, res) => {
 export const deleteHistory = async (req, res) => {
     try {
         const { sessionId } = req.params;
-        await prisma.uploadSession.delete({
-            where: {
-                id: Number(sessionId)
-            }
+        const session =
+            await prisma.uploadSession.findUnique({
+                where: {
+                    id: Number(sessionId)
+                }
+            });
 
+        if (!session) {
+            return res.status(404).json({
+                error: "History not found"
+            });
+        }
+
+        if (
+            session.userId !== req.user.id
+        ) {
+            return res.status(403).json({
+                error: "Forbidden"
+            });
+        }
+
+        await prisma.$transaction(async (tx) => {
+            await tx.analysisResult.deleteMany({
+                where: {
+                    sessionId: Number(sessionId)
+                }
+            });
+
+            await tx.cVFile.deleteMany({
+                where: {
+                    sessionId: Number(sessionId)
+                }
+            });
+
+            await tx.jobDescriptionFile.deleteMany({
+                where: {
+                    sessionId: Number(sessionId)
+                }
+            });
+
+            await tx.uploadSession.delete({
+                where: {
+                    id: Number(sessionId)
+                }
+            });
         });
 
         res.json({
@@ -481,5 +674,81 @@ export const deleteHistory = async (req, res) => {
         res.status(500).json({
             error: error.message
         });
+    }
+};
+
+export const deleteGuestSession = async (req, res) => {
+    try {
+        const { guestId } = req.body;
+        if (!guestId) {
+            return res.status(400).json({
+                error: "Guest ID is required"
+            });
+        }
+
+        const sessions =
+            await prisma.uploadSession.findMany({
+                where: {
+                    guestId
+                },
+                select: {
+                    id: true
+                }
+            });
+
+        if (sessions.length === 0) {
+            return res.json({
+                message: "No session found"
+            });
+        }
+
+        const sessionIds =
+            sessions.map(
+                s => s.id
+            );
+
+        await prisma.$transaction([
+            prisma.analysisResult.deleteMany({
+                where: {
+                    sessionId: {
+                        in: sessionIds
+                    }
+                }
+            }),
+
+            prisma.cVFile.deleteMany({
+                where: {
+                    sessionId: {
+                        in: sessionIds
+                    }
+                }
+            }),
+
+            prisma.jobDescriptionFile.deleteMany({
+                where: {
+                    sessionId: {
+                        in: sessionIds
+                    }
+                }
+            }),
+
+            prisma.uploadSession.deleteMany({
+                where: {
+                    id: {
+                        in: sessionIds
+                    }
+                }
+            })
+        ]);
+
+        res.json({
+            message: "Guest session deleted"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        });
+
     }
 };

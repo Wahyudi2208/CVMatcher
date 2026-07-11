@@ -2,25 +2,46 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 
 export default function LoginPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
     const hasShown = useRef(false);
 
     useEffect(() => {
-        const success = searchParams.get("success");
+        const params = new URLSearchParams(window.location.search);
+        const success = params.get("success");
 
-        if (success === "register" && !hasShown.current) {
+        if (
+            success === "register" &&
+            !hasShown.current
+        ) {
             hasShown.current = true;
-
-            toast.success("Registrasi berhasil!");
-
-            window.history.replaceState({}, "", "/login");
+            toast.success(
+                "Registrasi berhasil!"
+            );
+            window.history.replaceState(
+                {},
+                "",
+                "/login"
+            );
+        }
+        else if (
+            success === "reset-password" &&
+            !hasShown.current
+        ) {
+            hasShown.current = true;
+            toast.success(
+                "Password berhasil diperbarui."
+            );
+            window.history.replaceState(
+                {},
+                "",
+                "/login"
+            );
         }
     }, []);
 
@@ -97,16 +118,8 @@ export default function LoginPage() {
 
     const EyeIcon = ({ show }: { show: boolean }) => (
         <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
+            xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             {show ? (
                 <>
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
@@ -124,16 +137,8 @@ export default function LoginPage() {
 
     const CheckIcon = () => (
         <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
+            xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
         </svg>
     );
@@ -252,14 +257,11 @@ export default function LoginPage() {
                         </div>
 
                         {/* Forgot Password */}
-                        {/* <div className="flex justify-end -mt-2">
-                            <a
-                                href="#"
-                                className="text-sm text-blue-600 hover:underline font-medium"
-                            >
+                        <div className="flex justify-end -mt-2">
+                            <a href="/forgot_password" className="text-sm text-blue-600 hover:underline font-medium">
                                 Lupa Kata sandi ?
                             </a>
-                        </div> */}
+                        </div>
 
                         {/* Submit Button */}
                         <button

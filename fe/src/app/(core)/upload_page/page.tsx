@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, DragEvent, ChangeEvent, useEffect } from "react";
-import { Info } from "lucide-react";
+import { Info, LoaderCircle } from "lucide-react";
 
 export default function UploadPage() {
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -16,6 +16,7 @@ export default function UploadPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const jobDescriptionFileRef = useRef<HTMLInputElement>(null);
     const maxCVUpload = isLoggedIn ? 20 : 10;
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -88,6 +89,9 @@ export default function UploadPage() {
     const handleDrop = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsDragging(false);
+        if (uploadedFiles.length >= maxCVUpload) {
+            return;
+        }
         const files = Array.from(e.dataTransfer.files).filter(
             (f) =>
                 f.type === "application/pdf" ||
@@ -170,6 +174,7 @@ export default function UploadPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsAnalyzing(true);
 
         try {
             // Validation
@@ -188,25 +193,40 @@ export default function UploadPage() {
 
             // Token
             const token = localStorage.getItem("token");
-            const headers: HeadersInit = {};
+            let guestId = localStorage.getItem("guestId");
+            if (!token) {
+                if (!guestId) {
+                    guestId = crypto.randomUUID();
 
+                    localStorage.setItem(
+                        "guestId",
+                        guestId
+                    );
+                }
+            }
+
+            const headers: HeadersInit = {};
             if (token) {
                 headers.Authorization = `Bearer ${token}`;
             }
 
-            console.log("TOKEN :", token);
-            console.log("HEADERS :", headers);
             // Create Session
             const sessionRes = await fetch(
                 "http://localhost:5000/api/upload/session",
                 {
                     method: "POST",
-                    headers,
+                    headers: {
+                        ...headers,
+                        "Content-Type":
+                            "application/json",
+                    },
+                    body: JSON.stringify({
+                        guestId,
+                    }),
                 }
             );
 
             const sessionData = await sessionRes.json();
-
             if (!sessionRes.ok) {
                 throw new Error(
                     sessionData.error || "Failed create session"
@@ -214,7 +234,6 @@ export default function UploadPage() {
             }
 
             const sessionId = sessionData.session.id;
-
             localStorage.setItem(
                 "currentSessionId",
                 sessionId.toString()
@@ -246,7 +265,6 @@ export default function UploadPage() {
             );
 
             const cvData = await cvRes.json();
-
             if (!cvRes.ok) {
                 throw new Error(
                     cvData.error || "CV upload failed"
@@ -291,7 +309,6 @@ export default function UploadPage() {
             );
 
             const jobData = await jobRes.json();
-
             if (!jobRes.ok) {
                 throw new Error(
                     jobData.error || "Job description upload failed"
@@ -307,7 +324,6 @@ export default function UploadPage() {
             );
 
             const analyzeData = await analyzeRes.json();
-
             if (!analyzeRes.ok) {
                 throw new Error(
                     analyzeData.error || "Analyze failed"
@@ -315,13 +331,12 @@ export default function UploadPage() {
             }
 
             console.log(analyzeData);
-
             // Redirect Result Page
             window.location.replace(`/analysis_result/${sessionId}`);
 
         } catch (error: any) {
             console.error(error);
-
+            setIsAnalyzing(false);
             alert(
                 error.message || "Terjadi kesalahan"
             );
@@ -365,18 +380,8 @@ export default function UploadPage() {
                         onClick={() => setShowBanner(false)}
                         className="text-white hover:text-teal-200 flex-shrink-0 ml-4"
                     >
-                        <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
@@ -404,9 +409,23 @@ export default function UploadPage() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                     </svg>
                                 </div>
-                                <div>
-                                    <h2 className="font-semibold text-foreground">Unggah CV</h2>
-                                    <p className="text-xs text-muted">Format PDF atau DOCX</p>
+                                <div className="flex-1">
+                                    <div className="flex items-center justify-between">
+                                        <h2 className="font-semibold text-foreground">Unggah CV</h2>
+                                        <span
+                                            className={`
+                                                text-xs font-semibold px-2.5 py-1 rounded-full
+                                                ${uploadedFiles.length >= maxCVUpload
+                                                    ? "bg-red-100 text-red-600"
+                                                    : "bg-teal-100 text-teal-700"
+                                                }
+                                            `}>
+                                            {uploadedFiles.length}/{maxCVUpload}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-muted">
+                                        Format PDF atau DOCX
+                                    </p>
                                 </div>
                             </div>
 
@@ -415,30 +434,48 @@ export default function UploadPage() {
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
-                                onClick={() => fileInputRef.current?.click()}
-                                className={`border-2 border-dashed rounded-xl p-8 sm:p-12 flex flex-col items-center justify-center cursor-pointer transition-colors ${isDragging
-                                    ? "border-teal-500 bg-teal-50" : "border-border bg-brackground hover:border-teal-400 hover:bg-teal-50"
-                                    }`}
+                                onClick={() => {
+                                    if (uploadedFiles.length >= maxCVUpload) return;
+                                    fileInputRef.current?.click();
+                                }}
+                                className={`
+                                    border-2 border-dashed rounded-xl p-8 sm:p-12 flex flex-col items-center justify-center transition-colors
+                                    ${uploadedFiles.length >= maxCVUpload
+                                        ? "cursor-not-allowed opacity-60 border-border bg-background"
+                                        : isDragging
+                                            ? "border-teal-500 bg-teal-50 cursor-pointer"
+                                            : "border-border bg-background hover:border-teal-400 hover:bg-teal-50 cursor-pointer"
+                                    }
+                                `}
                             >
                                 <svg
                                     className={`w-10 h-10 mb-3 ${isDragging ? "text-teal-500" : "text-muted"}`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 >
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                 </svg>
                                 <p className="text-sm font-semibold text-muted">
-                                    Seret & lepas berkas CV
+                                    {uploadedFiles.length >= maxCVUpload
+                                        ? "Batas maksimum CV telah tercapai"
+                                        : "Seret & lepas berkas CV"}
                                 </p>
                                 <p className="text-sm text-muted mt-1">
-                                    atau{" "}
-                                    <span className="text-teal-600 underline font-medium">
-                                        klik untuk memilih berkas
-                                    </span>
+                                    {uploadedFiles.length >= maxCVUpload ? (
+                                        <>
+                                            Hapus salah satu CV untuk menambahkan
+                                            berkas baru.
+                                        </>
+                                    ) : (
+                                        <>
+                                            atau{" "}
+                                            <span className="text-teal-600 underline font-medium">
+                                                klik untuk memilih berkas
+                                            </span>
+                                        </>
+                                    )}
                                 </p>
                                 <p className="text-xs text-muted mt-2">
-                                    PDF, DOCX • Maks. {maxCVUpload} per berkas
+                                    PDF, DOCX • Maks. {maxCVUpload} berkas
                                 </p>
                                 <input
                                     ref={fileInputRef}
@@ -453,31 +490,33 @@ export default function UploadPage() {
 
                             {/* File List */}
                             {uploadedFiles.length > 0 && (
-                                <ul className="mt-3 space-y-2">
-                                    {uploadedFiles.map((file, index) => (
-                                        <li
-                                            key={index}
-                                            className="flex items-center justify-between bg-teal-50 border border-teal-100 rounded-lg px-3 py-2 text-sm"
-                                        >
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <svg className="w-4 h-4 text-teal-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                <span className="text-muted truncate">{file.name}</span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveFile(index)}
-                                                className="text-muted hover:text-red-500 ml-2 flex-shrink-0"
-                                                aria-label={`Remove ${file.name}`}
+                                <div className="mt-3 max-h-64 overflow-y-auto pr-1">
+                                    <ul className="space-y-2">
+                                        {uploadedFiles.map((file, index) => (
+                                            <li
+                                                key={index}
+                                                className="flex items-center justify-between bg-teal-50 border border-teal-100 rounded-lg px-3 py-2 text-sm"
                                             >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <svg className="w-4 h-4 text-teal-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    <span className="text-muted truncate">{file.name}</span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveFile(index)}
+                                                    className="text-muted hover:text-red-500 ml-2 flex-shrink-0"
+                                                    aria-label={`Remove ${file.name}`}
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
                             )}
                         </div>
 
@@ -489,12 +528,10 @@ export default function UploadPage() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                     </svg>
                                 </div>
-
                                 <div>
                                     <h2 className="font-semibold text-foreground">
                                         Deskripsi Pekerjaan
                                     </h2>
-
                                     <p className="text-xs text-muted">
                                         Ketik manual atau unggah 1 berkas PDF/DOCX
                                     </p>
@@ -525,14 +562,10 @@ export default function UploadPage() {
                                     <svg
                                         className={`w-8 h-8 mb-2 ${isDraggingJobDesc ? "text-teal-500" : "text-muted"
                                             }`}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     >
                                         <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="1.5"
+                                            strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
                                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                                         />
                                     </svg>
@@ -568,7 +601,6 @@ export default function UploadPage() {
                                             <svg className="w-4 h-4 text-teal-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
-
                                             <span className="text-muted truncate">
                                                 {jobDescriptionFile.name}
                                             </span>
@@ -611,7 +643,6 @@ export default function UploadPage() {
                                         <span className="text-xs text-muted">
                                             Minimal 50 karakter untuk analisis terbaik
                                         </span>
-
                                         <span className="text-xs text-muted">
                                             {jobDescription.length}/10,000
                                         </span>
@@ -623,7 +654,6 @@ export default function UploadPage() {
                                     <svg className="w-4 h-4 text-teal-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                     </svg>
-
                                     <p className="text-xs text-muted">
                                         <span className="font-semibold">Tips:</span>{" "}
                                         Sertakan kualifikasi, skill teknis, dan tanggung jawab pekerjaan untuk hasil analisis yang lebih akurat.
@@ -637,11 +667,13 @@ export default function UploadPage() {
                     <div className="mt-6 flex flex-col items-center gap-2">
                         <button
                             type="submit"
-                            disabled={!isFormValid}
-                            className={`w-full max-w-2xl flex items-center justify-center gap-2 py-3.5 px-8 rounded-2xl text-sm sm:text-base font-semibold transition-all ${isFormValid
-                                ? "bg-teal-600 hover:bg-teal-700 text-white shadow-md"
-                                : "bg-gray-200 text-muted cursor-not-allowed"
-                                }`}
+                            disabled={!isFormValid || isAnalyzing}
+                            className={`w-full max-w-2xl flex items-center justify-center gap-2 py-3.5 px-8 rounded-2xl text-sm sm:text-base font-semibold transition-all 
+                                ${isFormValid && !isAnalyzing
+                                    ? "bg-teal-600 hover:bg-teal-700 text-white shadow-md cursor-pointer"
+                                    : "bg-gray-200 text-muted cursor-not-allowed"
+                                }
+                            `}
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -659,6 +691,24 @@ export default function UploadPage() {
                     </div>
                 </form>
             </main>
+            {isAnalyzing && (
+                <div className="fixed inset-0 z-[9999] bg-black/55 backdrop-blur-sm flex items-center justify-center">
+                    <div className="w-full max-w-md mx-4 rounded-2xl bg-card border border-border shadow-2xl p-8">
+                        <div className="flex flex-col items-center text-center">
+                            <LoaderCircle className="w-14 h-14 text-teal-600 animate-spin" />
+                            <h2 className="mt-6 text-xl font-bold text-foreground">
+                                Sedang Menganalisis CV...
+                            </h2>
+                            <p className="mt-3 text-sm leading-6 text-muted">
+                                Mohon tunggu sebentar.
+                                <br />
+                                Proses ini dapat memerlukan beberapa saat
+                                tergantung jumlah CV yang dianalisis.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

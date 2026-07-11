@@ -7,6 +7,7 @@ import {
     ExternalLink,
     FileText,
 } from "lucide-react";
+import { getTier } from "@/lib/score";
 
 type DetailResult = {
     id: number;
@@ -24,56 +25,22 @@ type DetailResult = {
     };
 };
 
-function getAILabelStyle(label: string) {
-    if (label === "Strong Match") {
-        return {
-            labelColor: "text-green-600",
-            ringColor: "#16a34a",
-        };
-    }
-
-    if (label === "Potential Match") {
-        return {
-            labelColor: "text-yellow-500",
-            ringColor: "#eab308",
-        };
-    }
-
-    return {
-        labelColor: "text-red-600",
-        ringColor: "#dc2626",
-    };
-}
-
-function CircularScore({
-    score,
-    color,
-    label,
-}: {
-    score: number;
-    color: string;
-    label: string;
-}) {
-    const radius = 42;
+function CircleScore({ score, color }: { score: number; color: string }) {
+    const radius = 28;
     const circumference = 2 * Math.PI * radius;
-    const offset =
-        circumference -
-        (score / 100) * circumference;
+    const offset = circumference - (score / 100) * circumference;
 
     return (
-        <div className="flex flex-col items-center gap-2">
-            <div className="relative w-24 h-24">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r={radius} fill="none" stroke="currentColor" className="text-border" strokeWidth="7" />
-                    <circle cx="50" cy="50" r={radius} fill="none" stroke={color} strokeWidth="7" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" />
+        <div className="flex flex-col items-center gap-1">
+            <div className="relative w-16 h-16 flex items-center justify-center">
+                <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 72 72">
+                    <circle cx="36" cy="36" r={radius} fill="none" stroke="currentColor" className="text-border" strokeWidth="5" strokeLinecap="round" />
+                    <circle cx="36" cy="36" r={radius} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} />
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xl font-bold text-foreground">
-                        {score.toFixed(2)}%
-                    </span>
-                </div>
+                <span className="relative text-sm font-bold text-foreground">
+                    {score.toFixed(2)}%
+                </span>
             </div>
-            <span className="text-sm font-semibold">{label}</span>
         </div>
     );
 }
@@ -149,11 +116,34 @@ export default function ResultDetailPage() {
 
     useEffect(() => {
         const fetchDetail = async () => {
+            const token = localStorage.getItem("token");
+            const guestId = localStorage.getItem("guestId");
             try {
-                const res = await fetch(
-                    `http://localhost:5000/api/upload/result/${params.resultId}`
-                );
+                const res =
+                    await fetch(
+                        `http://localhost:5000/api/upload/result/${params.resultId}`,
+                        {
+                            headers: {
+                                ...(token
+                                    ? {
+                                        Authorization:
+                                            `Bearer ${token}`
+                                    }
+                                    : {}),
+                                ...(guestId
+                                    ? {
+                                        "x-guest-id":
+                                            guestId
+                                    }
+                                    : {})
+                            }
+                        }
+                    );
                 const data = await res.json();
+                if (res.status === 401 || res.status === 403) {
+                    router.replace("/upload_page");
+                    return;
+                }
                 if (!res.ok) {
                     throw new Error(
                         data.error ||
@@ -165,15 +155,27 @@ export default function ResultDetailPage() {
             catch (err: any) {
                 setError(err.message);
             }
-
             finally {
                 setLoading(false);
             }
         };
 
         fetchDetail();
-
     }, [params]);
+
+    useEffect(() => {
+        const handlePageHide = () => {
+            setLoading(false);
+            setResult(null);
+            setError("");
+        };
+
+        window.addEventListener("pagehide", handlePageHide);
+
+        return () => {
+            window.removeEventListener("pagehide", handlePageHide);
+        };
+    }, []);
 
     if (loading) {
         return (
@@ -196,6 +198,7 @@ export default function ResultDetailPage() {
     }
 
     if (!result) return null;
+    const tier = getTier(result.score);
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
@@ -226,11 +229,18 @@ export default function ResultDetailPage() {
                         </div>
 
                         <div className="shrink-0">
-                            <CircularScore
-                                score={result.score}
-                                label={result.label}
-                                color={getAILabelStyle(result.label).ringColor}
-                            />
+                            <div className="flex flex-col items-center">
+                                <CircleScore
+                                    score={result.score}
+                                    color={tier.ringColor}
+                                />
+
+                                <span
+                                    className={`text-sm font-semibold mt-2 ${tier.labelColor}`}
+                                >
+                                    {tier.label}
+                                </span>
+                            </div>
                         </div>
                     </div>
 

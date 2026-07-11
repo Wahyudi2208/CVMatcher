@@ -28,7 +28,8 @@ model User {
 
 model UploadSession {
   id         Int      @id @default(autoincrement())
-  userId     Int?     @map("user_id") // null = guest
+  userId     Int?     @map("user_id")
+  guestId    String?  @map("guest_id") @db.VarChar(100)
   token      String   @unique
   status     SessionStatus @default(DRAFT)
   title      String?  @db.VarChar(255)
@@ -89,6 +90,19 @@ model AnalysisResult {
   cvFile     CVFile        @relation(fields: [cvFileId], references: [id])
 
   @@map("analysis_results")
+}
+
+model PasswordResetOTP {
+  id         Int      @id @default(autoincrement())
+
+  email      String
+  otp        String
+  expiresAt  DateTime @map("expires_at")
+  attempts   Int      @default(0)
+  verified   Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("password_reset_otp")
 }
 
 enum FileType {
