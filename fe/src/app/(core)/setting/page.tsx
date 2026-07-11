@@ -141,6 +141,126 @@ export default function SettingsPage() {
         }
     };
 
+    const handleClearLocalData = async () => {
+        const result = await Swal.fire({
+            icon: "warning",
+            title: "Hapus Data Lokal?",
+            text: "Seluruh data lokal pada browser ini akan dihapus.",
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonText: "Hapus",
+            cancelButtonText: "Batal",
+            customClass: {
+                popup: "custom-swal-popup",
+                actions: "custom-swal-actions",
+                confirmButton: "custom-swal-confirm",
+                cancelButton: "custom-swal-cancel",
+            },
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        // Data analisis guest
+        localStorage.removeItem("currentSessionId");
+        localStorage.removeItem("guestId");
+
+        // Preferensi UI sementara
+        localStorage.removeItem("desktopSidebarOpen");
+
+        // Bersihkan session storage
+        sessionStorage.clear();
+
+        await Swal.fire({
+            icon: "success",
+            title: "Berhasil",
+            text: "Data lokal berhasil dihapus.",
+            customClass: {
+                popup: "custom-swal-popup",
+                confirmButton: "custom-swal-confirm-delete",
+            },
+        });
+
+        window.location.reload();
+    };
+
+    const handleDeleteAllAnalysis = async () => {
+        const result = await Swal.fire({
+            icon: "warning",
+            title: "Hapus Semua Analisis?",
+            text: "Seluruh riwayat analisis akan dihapus permanen.",
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonText: "Hapus",
+            cancelButtonText: "Batal",
+            customClass: {
+                popup: "custom-swal-popup",
+                actions: "custom-swal-actions",
+                confirmButton: "custom-swal-confirm",
+                cancelButton: "custom-swal-cancel",
+            },
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem("token");
+            const response =
+                await fetch(
+                    "http://localhost:5000/api/upload/history",
+                    {
+                        method: "DELETE",
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error
+                );
+            }
+
+            await Swal.fire({
+                icon: "success",
+                title: "Berhasil",
+                text: "Seluruh riwayat analisis berhasil dihapus.",
+                customClass: {
+                    popup: "custom-swal-popup",
+                    confirmButton:
+                        "custom-swal-confirm-delete",
+                },
+            });
+
+            localStorage.removeItem(
+                "currentSessionId"
+            );
+
+            window.location.reload();
+
+        }
+        catch (error) {
+            Swal.fire({
+                icon: "error",
+                title: "Gagal",
+                text: "Gagal menghapus seluruh riwayat analisis.",
+                customClass: {
+                    popup: "custom-swal-popup",
+                    confirmButton:
+                        "custom-swal-confirm",
+                },
+            });
+        }
+    };
+
     if (!mounted) {
         return null;
     }
@@ -158,7 +278,7 @@ export default function SettingsPage() {
                         <p className="text-sm text-muted mb-3">General</p>
                         <div className="bg-card rounded-xl shadow-sm border border-border divide-y divide-border">
                             {/* Language */}
-                            <div className="flex items-center justify-between px-6 py-4">
+                            {/* <div className="flex items-center justify-between px-6 py-4">
                                 <span className="text-sm text-foreground">Bahasa</span>
                                 <div className="relative">
                                     <select
@@ -184,7 +304,7 @@ export default function SettingsPage() {
                                         </svg>
                                     </span>
                                 </div>
-                            </div>
+                            </div> */}
 
                             {/* Theme */}
                             <div className="flex items-center justify-between px-6 py-4">
@@ -232,14 +352,8 @@ export default function SettingsPage() {
                             <div className="flex items-center justify-between px-6 py-4">
                                 <span className="text-sm text-foreground">Hapus data lokal</span>
                                 <button
-                                    onClick={() =>
-                                        Swal.fire(
-                                            "Coming Soon",
-                                            "Fitur belum diimplementasikan.",
-                                            "info"
-                                        )
-                                    }
-                                    className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+                                    onClick={handleClearLocalData}
+                                    className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer"
                                 >
                                     Hapus
                                 </button>
@@ -250,14 +364,8 @@ export default function SettingsPage() {
                                 <div className="flex items-center justify-between px-6 py-4">
                                     <span className="text-sm text-foreground">Hapus semua analisis</span>
                                     <button
-                                        onClick={() =>
-                                            Swal.fire(
-                                                "Coming Soon",
-                                                "Fitur belum diimplementasikan.",
-                                                "info"
-                                            )
-                                        }
-                                        className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+                                        onClick={handleDeleteAllAnalysis}
+                                        className="border border-red-500 text-red-500 font-semibold text-sm px-5 py-1.5 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer"
                                     >
                                         Hapus
                                     </button>

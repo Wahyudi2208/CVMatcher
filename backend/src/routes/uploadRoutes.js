@@ -12,6 +12,7 @@ import {
     getHistory,
     renameHistory,
     deleteHistory,
+    deleteAllHistory,
     deleteGuestSession
 } from '../controllers/uploadController.js'
 
@@ -82,6 +83,12 @@ router.delete(
     "/history/:sessionId",
     authenticate,
     deleteHistory
+);
+
+router.delete(
+    "/history",
+    authenticate,
+    deleteAllHistory
 );
 
 export default router

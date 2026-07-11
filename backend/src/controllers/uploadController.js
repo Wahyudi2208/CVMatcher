@@ -677,6 +677,74 @@ export const deleteHistory = async (req, res) => {
     }
 };
 
+export const deleteAllHistory = async (req, res) => {
+    try {
+        const sessions =
+            await prisma.uploadSession.findMany({
+                where: {
+                    userId: req.user.id
+                },
+                select: {
+                    id: true
+                }
+            });
+
+        if (sessions.length === 0) {
+            return res.json({
+                message: "No history found"
+            });
+        }
+
+        const sessionIds =
+            sessions.map(
+                session => session.id
+            );
+
+        await prisma.$transaction([
+            prisma.analysisResult.deleteMany({
+                where: {
+                    sessionId: {
+                        in: sessionIds
+                    }
+                }
+            }),
+
+            prisma.cVFile.deleteMany({
+                where: {
+                    sessionId: {
+                        in: sessionIds
+                    }
+                }
+            }),
+
+            prisma.jobDescriptionFile.deleteMany({
+                where: {
+                    sessionId: {
+                        in: sessionIds
+                    }
+                }
+            }),
+
+            prisma.uploadSession.deleteMany({
+                where: {
+                    id: {
+                        in: sessionIds
+                    }
+                }
+            })
+        ]);
+
+        res.json({
+            message: "All history deleted successfully"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        });
+    }
+};
+
 export const deleteGuestSession = async (req, res) => {
     try {
         const { guestId } = req.body;

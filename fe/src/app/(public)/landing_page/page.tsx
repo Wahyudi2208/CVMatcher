@@ -29,7 +29,6 @@ export default function Home() {
                 <div className="hidden md:flex items-center gap-8">
                     <a href="#fitur" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">Fitur</a>
                     <a href="#cara-kerja" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">Cara Kerja</a>
-                    <a href="#faq" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">FAQ</a>
                 </div>
 
                 <div className="hidden md:flex items-center gap-4">
@@ -60,7 +59,6 @@ export default function Home() {
                     <div className="absolute top-full left-0 right-0 bg-white border-b border-gray-100 shadow-lg md:hidden px-6 py-4 flex flex-col gap-4">
                         <a href="#fitur" className="text-gray-600 text-sm" onClick={() => setMobileMenuOpen(false)}>Fitur</a>
                         <a href="#cara-kerja" className="text-gray-600 text-sm" onClick={() => setMobileMenuOpen(false)}>Cara Kerja</a>
-                        <a href="#faq" className="text-gray-600 text-sm" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
                         <hr className="border-gray-100" />
                         <a href="/login" className="text-gray-600 text-sm">Masuk</a>
                         <a href="/register" className="bg-[#1a6bcc] hover:bg-[#1558b0] text-white text-sm font-medium px-5 py-2 rounded-lg text-center">Mulai Sekarang</a>
@@ -75,7 +73,7 @@ export default function Home() {
                     <div className="flex-1 max-w-xl">
                         <span className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-3 py-1 text-xs text-gray-600 mb-6 shadow-sm">
                             <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
-                            Powered by Semantic NLP
+                            Powered by SBERT Semantic Matching
                         </span>
                         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-5">
                             Temukan kandidat terbaik —{" "}
@@ -87,86 +85,34 @@ export default function Home() {
                         <a href="/upload_page" className="inline-block bg-[#1a6bcc] hover:bg-[#1558b0] text-white font-semibold px-7 py-3 rounded-lg text-sm transition-colors shadow-lg">
                             Coba Sekarang
                         </a>
+
+                        <p className="mt-4 text-sm text-gray-500">
+                            ✓ Tanpa instalasi • ✓ Mendukung PDF & Word
+                        </p>
                     </div>
 
-                    {/* Right — CV Analysis Card */}
+                    {/* Right — Real Product Preview */}
                     <div className="flex-1 flex justify-center lg:justify-end w-full">
-                        <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm border border-gray-100">
-                            <div className="flex items-center justify-between mb-3">
-                                <div>
-                                    <p className="font-semibold text-gray-900 text-sm">Analisis CV</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">Senior Frontend Developer</p>
-                                </div>
-                                <span className="inline-flex items-center gap-1 bg-[#1B6CA8] text-white text-xs font-semibold px-2.5 py-1 rounded-md">
-                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                    AI Powered
+                        <div className="relative">
+                            <Image
+                                src="/img/preview.png"
+                                alt="Preview Hasil Analisis CVMatcher" width={1200} height={760} priority
+                                className="rounded-2xl border border-gray-200 shadow-2xl transition-transform duration-500 hover:scale-[1.02]"
+                            />
+                            {/* Label */}
+                            <div className="absolute top-5 right-5 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-md border border-gray-200">
+                                <span className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                    Preview
                                 </span>
-                            </div>
-
-                            <div className="flex items-center justify-end mb-4">
-                                <span className="flex items-center gap-1 text-emerald-500 text-sm font-bold">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    92%
-                                </span>
-                            </div>
-
-                            <div className="space-y-3 mb-5">
-                                {[
-                                    { label: "Technical Skills", value: 95, color: "bg-emerald-500" },
-                                    { label: "Experience Match", value: 88, color: "bg-[#1B6CA8]" },
-                                    { label: "Education", value: 92, color: "bg-[#1B6CA8]" },
-                                ].map((item) => (
-                                    <div key={item.label}>
-                                        <div className="flex justify-between text-xs text-gray-500 mb-1">
-                                            <span>{item.label}</span>
-                                            <span className="font-medium text-gray-700">{item.value}%</span>
-                                        </div>
-                                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full ${item.color} rounded-full`}
-                                                style={{ width: `${item.value}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="border-t border-gray-100 pt-4">
-                                <div className="flex items-start gap-2">
-                                    <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-800">Highly Recommended</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">Strong match with job requirements. Consider for interview.</p>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Trust Bar */}
-            <section className="bg-white py-8 px-6 md:px-10 lg:px-16 border-b border-gray-100">
-                <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-6">
-                    <div className="flex items-center gap-2 text-sm text-gray-500 shrink-0">
-                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" strokeWidth="1.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span>
-                            Dipercaya oleh<br />
-                            <strong className="text-gray-800">500+ pengguna</strong>
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-3 flex-wrap justify-center">
-                        {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="h-7 w-20 bg-gray-100 rounded-md animate-pulse"></div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
             {/* Fitur Unggulan */}
-            <section id="fitur" className="py-20 bg-gray-50 px-6 md:px-10 lg:px-16">
+            <section id="fitur" className="py-20 bg-white px-6 md:px-10 lg:px-16">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">Fitur Unggulan</h2>
@@ -217,7 +163,7 @@ export default function Home() {
             </section>
 
             {/* Cara Kerja */}
-            <section id="cara-kerja" className="py-20 bg-white px-6 md:px-10 lg:px-16">
+            <section id="cara-kerja" className="py-20 bg-gray-50 px-6 md:px-10 lg:px-16">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-14">
                         <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">Cara Kerja</h2>
@@ -308,11 +254,9 @@ export default function Home() {
                     <div>
                         <h4 className="font-semibold text-gray-800 text-sm mb-4">Produk</h4>
                         <ul className="space-y-2">
-                            {["Fitur", "Cara Kerja"].map((item) => (
-                                <li key={item}>
-                                    <a href="#" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">{item}</a>
-                                </li>
-                            ))}
+                            <a href="#fitur" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">Fitur</a>
+                            <br></br>
+                            <a href="#cara-kerja" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">Cara Kerja</a>
                         </ul>
                     </div>
 
@@ -320,11 +264,7 @@ export default function Home() {
                     <div>
                         <h4 className="font-semibold text-gray-800 text-sm mb-4">Perusahaan</h4>
                         <ul className="space-y-2">
-                            {["Tentang Kami", "Kontak", "Kebijakan Privasi"].map((item) => (
-                                <li key={item}>
-                                    <a href="#" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">{item}</a>
-                                </li>
-                            ))}
+                            <a href="#" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">Kebijakan Privasi</a>
                         </ul>
                     </div>
                 </div>
