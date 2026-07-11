@@ -17,6 +17,7 @@ By leveraging Natural Language Processing (NLP) and SBERT (Sentence-BERT), CVMat
 # 📂 Documentation
 
 - 📄 ATS Documents : https://drive.google.com/drive/folders/1CPGAbdbneOiYQ6_n4hL9KPkKqU_54701?usp=drive_link
+- 📄 AAS Documents : https://drive.google.com/drive/folders/15ckPjGSzKdmNPFSphxi83w8A8k0tGfzT
 
 ---
 
