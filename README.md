@@ -11,7 +11,7 @@ By leveraging Natural Language Processing (NLP) and SBERT (Sentence-BERT), CVMat
 # 🎥 Project Presentation Videos
 
 - 📽️ ATS : https://youtu.be/XuddyQjvU38?list=LL
-- 📽️ AAS : https://www.youtube.com/watch?v=X9iXA6zXBzc
+- 📽️ AAS : https://www.youtube.com/watch?si=_rp3dKMzu7Wz5KLG&v=ogHZH5f4se8&feature=youtu.be
 
 ---
 
